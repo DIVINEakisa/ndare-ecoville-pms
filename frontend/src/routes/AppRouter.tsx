@@ -1,31 +1,108 @@
+import { lazy, Suspense } from 'react';
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
+import { Skeleton } from '../components/ui/Skeleton';
 import { DashboardLayout } from '../layouts/DashboardLayout';
+import { GuestPortalLayout } from '../layouts/GuestPortalLayout';
 import { LoginPage } from '../features/auth/LoginPage';
-import { DashboardPage } from '../features/dashboard/DashboardPage';
 import { PlaceholderPage } from '../features/shared/PlaceholderPage';
 import { ProtectedRoute } from './ProtectedRoute';
+import { OwnerRoute } from './OwnerRoute';
+
+const DashboardPage = lazy(() =>
+  import('../features/dashboard/DashboardPage').then((module) => ({ default: module.DashboardPage }))
+);
+const ReservationsPage = lazy(() =>
+  import('../features/operations/ReservationsPage').then((module) => ({ default: module.ReservationsPage }))
+);
+const GuestsPage = lazy(() => import('../features/operations/GuestsPage').then((module) => ({ default: module.GuestsPage })));
+const RoomsPage = lazy(() => import('../features/operations/RoomsPage').then((module) => ({ default: module.RoomsPage })));
+const CheckInPage = lazy(() =>
+  import('../features/operations/CheckInPage').then((module) => ({ default: module.CheckInPage }))
+);
+const CheckOutPage = lazy(() =>
+  import('../features/operations/CheckOutPage').then((module) => ({ default: module.CheckOutPage }))
+);
+const FoliosPage = lazy(() =>
+  import('../features/folios/FoliosPage').then((module) => ({ default: module.FoliosPage }))
+);
+const RestaurantPage = lazy(() =>
+  import('../features/restaurant/RestaurantPage').then((module) => ({ default: module.RestaurantPage }))
+);
+const KitchenQueuePage = lazy(() =>
+  import('../features/restaurant/KitchenQueuePage').then((module) => ({ default: module.KitchenQueuePage }))
+);
+const GuestPortalPage = lazy(() =>
+  import('../features/guest-portal/GuestPortalPage').then((module) => ({ default: module.GuestPortalPage }))
+);
+const InventoryPage = lazy(() =>
+  import('../features/supply/InventoryPage').then((module) => ({ default: module.InventoryPage }))
+);
+const RequisitionsPage = lazy(() =>
+  import('../features/supply/RequisitionsPage').then((module) => ({ default: module.RequisitionsPage }))
+);
+const NotificationsPage = lazy(() =>
+  import('../features/supply/NotificationsPage').then((module) => ({ default: module.NotificationsPage }))
+);
+const ReportsPage = lazy(() =>
+  import('../features/admin/ReportsPage').then((module) => ({ default: module.ReportsPage }))
+);
+const SettingsPage = lazy(() =>
+  import('../features/admin/SettingsPage').then((module) => ({ default: module.SettingsPage }))
+);
+const UsersPage = lazy(() =>
+  import('../features/users/UsersPage').then((module) => ({ default: module.UsersPage }))
+);
+const LandingPage = lazy(() =>
+  import('../features/marketing/LandingPage').then((module) => ({ default: module.LandingPage }))
+);
+
+function RouteFallback() {
+  return (
+    <div className="space-y-4">
+      <Skeleton className="h-10 w-64" />
+      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+        {Array.from({ length: 4 }).map((_, index) => (
+          <Skeleton key={index} className="h-32" />
+        ))}
+      </div>
+    </div>
+  );
+}
 
 export function AppRouter() {
   return (
     <BrowserRouter>
-      <Routes>
-        <Route path="/login" element={<LoginPage />} />
-        <Route element={<ProtectedRoute />}>
-          <Route element={<DashboardLayout />}>
-            <Route index element={<Navigate to="/dashboard" replace />} />
-            <Route path="/dashboard" element={<DashboardPage />} />
-            <Route path="/reservations" element={<PlaceholderPage title="Reservations" />} />
-            <Route path="/guests" element={<PlaceholderPage title="Guests" />} />
-            <Route path="/rooms" element={<PlaceholderPage title="Rooms" />} />
-            <Route path="/restaurant" element={<PlaceholderPage title="Restaurant" />} />
-            <Route path="/folios" element={<PlaceholderPage title="Guest Folios" />} />
-            <Route path="/inventory" element={<PlaceholderPage title="Inventory" />} />
-            <Route path="/requisitions" element={<PlaceholderPage title="Requisitions" />} />
-            <Route path="/reports" element={<PlaceholderPage title="Reports" />} />
-            <Route path="/settings" element={<PlaceholderPage title="Settings" />} />
+      <Suspense fallback={<RouteFallback />}>
+        <Routes>
+          <Route path="/" element={<LandingPage />} />
+          <Route path="/login" element={<LoginPage />} />
+          <Route element={<GuestPortalLayout />}>
+            <Route path="/guest-portal/:propertyId/:roomId" element={<GuestPortalPage />} />
+            <Route path="/guest-portal/demo" element={<GuestPortalPage />} />
           </Route>
-        </Route>
-      </Routes>
+          <Route element={<ProtectedRoute />}>
+            <Route element={<DashboardLayout />}>
+              <Route path="/dashboard" element={<DashboardPage />} />
+              <Route path="/reservations" element={<ReservationsPage />} />
+              <Route path="/guests" element={<GuestsPage />} />
+              <Route path="/rooms" element={<RoomsPage />} />
+              <Route path="/check-in" element={<CheckInPage />} />
+              <Route path="/check-out" element={<CheckOutPage />} />
+              <Route path="/restaurant" element={<RestaurantPage />} />
+              <Route path="/kitchen" element={<KitchenQueuePage />} />
+              <Route path="/folios" element={<FoliosPage />} />
+              <Route path="/inventory" element={<InventoryPage />} />
+              <Route path="/requisitions" element={<RequisitionsPage />} />
+              <Route path="/notifications" element={<NotificationsPage />} />
+              <Route path="/reports" element={<ReportsPage />} />
+              <Route path="/settings" element={<SettingsPage />} />
+              <Route element={<OwnerRoute />}>
+                <Route path="/dashboard/users" element={<UsersPage />} />
+              </Route>
+            </Route>
+          </Route>
+        </Routes>
+      </Suspense>
     </BrowserRouter>
   );
 }

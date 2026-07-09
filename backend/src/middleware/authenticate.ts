@@ -16,7 +16,7 @@ export async function authenticate(req: Request, _res: Response, next: NextFunct
   const token = header?.startsWith('Bearer ') ? header.slice(7) : undefined;
 
   if (!token) {
-    throw new AppError(401, 'Authentication required', 'AUTH_REQUIRED');
+    return next(new AppError(401, 'Authentication required', 'AUTH_REQUIRED'));
   }
 
   try {
@@ -24,7 +24,7 @@ export async function authenticate(req: Request, _res: Response, next: NextFunct
     const user = await User.findOne({ _id: payload.sub, isActive: true, deletedAt: null }).lean();
 
     if (!user) {
-      throw new AppError(401, 'User session is no longer valid', 'INVALID_SESSION');
+      return next(new AppError(401, 'User session is no longer valid', 'INVALID_SESSION'));
     }
 
     req.user = {
@@ -38,7 +38,7 @@ export async function authenticate(req: Request, _res: Response, next: NextFunct
 
     next();
   } catch (error) {
-    if (error instanceof AppError) throw error;
-    throw new AppError(401, 'Invalid or expired access token', 'INVALID_TOKEN');
+    if (error instanceof AppError) return next(error);
+    return next(new AppError(401, 'Invalid or expired access token', 'INVALID_TOKEN'));
   }
 }

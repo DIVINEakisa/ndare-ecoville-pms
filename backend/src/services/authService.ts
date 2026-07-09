@@ -15,7 +15,7 @@ function sha256(value: string) {
 export async function login(input: { email: string; password: string; ipAddress?: string; userAgent?: string }) {
   const user = await User.findOne({ email: input.email.toLowerCase(), deletedAt: null }).select('+passwordHash');
 
-  if (!user || !user.isActive || !(await user.verifyPassword(input.password))) {
+  if (!user || !user.isActive || !(await bcrypt.compare(input.password, user.passwordHash))) {
     throw new AppError(401, 'Invalid email or password', 'INVALID_CREDENTIALS');
   }
 

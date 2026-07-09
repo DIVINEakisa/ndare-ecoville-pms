@@ -17,13 +17,17 @@ export const rolePermissions: Record<UserRole, string[]> = {
   Admin: ['*'],
   'Property Manager': [
     'dashboard:read',
+    'rooms:read',
     'rooms:manage',
     'reservations:manage',
     'guests:manage',
+    'folios:read',
     'folios:manage',
     'orders:manage',
+    'menu:manage',
     'inventory:manage',
     'requisitions:approve',
+    'requisitions:receive',
     'reports:read'
   ],
   Receptionist: [
@@ -31,12 +35,14 @@ export const rolePermissions: Record<UserRole, string[]> = {
     'rooms:read',
     'reservations:manage',
     'guests:manage',
+    'folios:read',
     'folios:manage',
     'payments:create',
-    'orders:create'
+    'orders:manage',
+    'menu:read'
   ],
   Cashier: ['dashboard:read', 'folios:read', 'payments:create', 'reports:payments'],
-  'Kitchen Staff': ['dashboard:read', 'orders:manage', 'menu:read', 'inventory:read'],
+  'Kitchen Staff': ['dashboard:read', 'orders:manage', 'menu:read', 'inventory:read', 'requisitions:create'],
   'Department Staff': ['dashboard:read', 'requisitions:create', 'inventory:read']
 };
 

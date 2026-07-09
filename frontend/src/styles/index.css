@@ -18,9 +18,26 @@ body {
   min-height: 100vh;
   background: #f8fafc;
   color: #0f172a;
+  font-feature-settings: "cv02", "cv03", "cv04", "cv11";
 }
 
 .dark body {
   background: #020617;
   color: #e2e8f0;
+}
+
+button,
+input,
+select,
+textarea {
+  letter-spacing: 0;
+}
+
+button {
+  transition:
+    background-color 180ms ease,
+    border-color 180ms ease,
+    color 180ms ease,
+    box-shadow 180ms ease,
+    transform 180ms ease;
 }

@@ -2,7 +2,6 @@ import crypto from 'crypto';
 import jwt, { type SignOptions } from 'jsonwebtoken';
 import { env } from '../config/env.js';
 import { RefreshToken } from '../models/RefreshToken.js';
-import type { UserDocument } from '../models/User.js';
 import { AppError } from '../utils/AppError.js';
 
 function sha256(value: string) {
@@ -15,7 +14,7 @@ function refreshExpiry() {
   return expiresAt;
 }
 
-export function signAccessToken(user: Pick<UserDocument, '_id' | 'email' | 'role'>) {
+export function signAccessToken(user: { _id: unknown; email: string; role: string }) {
   const options: SignOptions = { expiresIn: env.ACCESS_TOKEN_TTL as SignOptions['expiresIn'] };
   return jwt.sign({ sub: String(user._id), email: user.email, role: user.role }, env.JWT_ACCESS_SECRET, options);
 }
