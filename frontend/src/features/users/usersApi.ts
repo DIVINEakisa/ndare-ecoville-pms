@@ -13,10 +13,11 @@ export type CreateStaffUserResponse = {
   temporaryPassword: string;
 };
 
-export type DeactivateStaffResponse = {
+export type ToggleStatusResponse = {
   id: string;
   fullName: string;
   email: string;
+  isActive: boolean;
 };
 
 export async function listStaffUsers() {
@@ -29,9 +30,9 @@ export async function createStaffUser(input: CreateStaffUserInput) {
   return data.data;
 }
 
-export async function deactivateStaffUser(userId: string) {
-  const { data } = await apiClient.patch<ApiResponse<DeactivateStaffResponse>>(
-    `/users/${userId}/deactivate`
+export async function toggleStaffStatus(userId: string) {
+  const { data } = await apiClient.patch<ApiResponse<ToggleStatusResponse>>(
+    `/users/${userId}/toggle-status`
   );
   return data.data;
 }

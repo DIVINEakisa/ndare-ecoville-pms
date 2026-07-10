@@ -15,8 +15,14 @@ function sha256(value: string) {
 export async function login(input: { email: string; password: string; ipAddress?: string; userAgent?: string }) {
   const user = await User.findOne({ email: input.email.toLowerCase(), deletedAt: null }).select('+passwordHash');
 
-  if (!user || !user.isActive || !(await bcrypt.compare(input.password, user.passwordHash))) {
+  // Distinguish deactivated accounts from wrong credentials so the user
+  // gets an actionable message instead of a generic "invalid credentials"
+  if (!user || !(await bcrypt.compare(input.password, user.passwordHash))) {
     throw new AppError(401, 'Invalid email or password', 'INVALID_CREDENTIALS');
+  }
+
+  if (!user.isActive) {
+    throw new AppError(403, 'This account has been deactivated. Please contact an administrator.', 'ACCOUNT_DEACTIVATED');
   }
 
   // Use updateOne so we never risk writing a stale in-memory document back over a

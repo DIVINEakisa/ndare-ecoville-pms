@@ -1,14 +1,17 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { Plus, QrCode } from 'lucide-react';
-import { useState } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import {
+  ChefHat, Clock, Loader2, Plus, QrCode,
+  Settings2, ShoppingCart, Utensils
+} from 'lucide-react';
+import { useRef, useState } from 'react';
 import toast from 'react-hot-toast';
-import { DataTable } from '../../components/ui/DataTable';
 import { EmptyState } from '../../components/ui/EmptyState';
 import { PageHeader } from '../../components/ui/PageHeader';
 import { Skeleton } from '../../components/ui/Skeleton';
-import { Toolbar } from '../../components/ui/Toolbar';
-import { listGuests, listRooms } from '../operations/operationsApi';
+import { useAuth } from '../auth/AuthProvider';
 import { getProperties } from '../dashboard/dashboardApi';
+import { listGuests, listRooms } from '../operations/operationsApi';
 import {
   createMenuCategory,
   createMenuItem,
@@ -16,198 +19,282 @@ import {
   listMenuCategories,
   listMenuItems,
   listOrders,
-  type MenuItem
+  type MenuItem,
+  type RestaurantOrder,
 } from './restaurantApi';
+import type { UserRole } from '../../types/api';
 
-const money = new Intl.NumberFormat('en-RW', { style: 'currency', currency: 'RWF', maximumFractionDigits: 0 });
+const money = new Intl.NumberFormat('en-RW', {
+  style: 'currency', currency: 'RWF', maximumFractionDigits: 0,
+});
 
+const MANAGEMENT_ROLES: UserRole[] = ['Owner', 'Admin', 'Property Manager'];
+
+type Tab = 'orders' | 'setup';
+
+// ─── shared input styles ────────────────────────────────────────────────────
+const inputCls =
+  'h-11 w-full rounded-xl border border-slate-200 bg-white px-4 text-sm outline-none ' +
+  'ring-lime-700 transition placeholder:text-slate-400 focus:ring-2 ' +
+  'dark:border-slate-700 dark:bg-slate-950 dark:text-white';
+const selectCls = inputCls + ' cursor-pointer';
+
+// ─── Root page ──────────────────────────────────────────────────────────────
 export function RestaurantPage() {
-  const queryClient = useQueryClient();
-  const [search, setSearch] = useState('');
+  const { user } = useAuth();
+  const canManage = MANAGEMENT_ROLES.includes(user?.role as UserRole);
+  const [tab, setTab] = useState<Tab>('orders');
   const [propertyId, setPropertyId] = useState('');
-  const [selectedItemId, setSelectedItemId] = useState('');
-  const properties = useQuery({ queryKey: ['properties'], queryFn: getProperties });
-  const categories = useQuery({ queryKey: ['menu-categories'], queryFn: listMenuCategories });
-  const menuItems = useQuery({ queryKey: ['menu-items', search, propertyId], queryFn: () => listMenuItems({ search, propertyId, limit: 100 }) });
-  const orders = useQuery({ queryKey: ['restaurant-orders', propertyId], queryFn: () => listOrders({ propertyId, limit: 25 }) });
-  const guests = useQuery({ queryKey: ['restaurant-guests', propertyId], queryFn: () => listGuests({ propertyId, limit: 100 }) });
-  const rooms = useQuery({ queryKey: ['restaurant-rooms', propertyId], queryFn: () => listRooms({ propertyId, limit: 100 }) });
 
-  const categoryMutation = useMutation({
-    mutationFn: createMenuCategory,
-    onSuccess: () => {
-      toast.success('Category created');
-      queryClient.invalidateQueries({ queryKey: ['menu-categories'] });
-    },
-    onError: () => toast.error('Could not create category')
+  const propertiesQuery = useQuery({ queryKey: ['properties'], queryFn: getProperties });
+  const menuItemsQuery  = useQuery({
+    queryKey: ['menu-items', propertyId],
+    queryFn: () => listMenuItems({ propertyId, limit: 200 }),
   });
-  const itemMutation = useMutation({
-    mutationFn: createMenuItem,
-    onSuccess: () => {
-      toast.success('Menu item created');
-      queryClient.invalidateQueries({ queryKey: ['menu-items'] });
-    },
-    onError: () => toast.error('Could not create menu item')
+  const ordersQuery = useQuery({
+    queryKey: ['restaurant-orders', propertyId],
+    queryFn: () => listOrders({ propertyId, limit: 50 }),
   });
-  const orderMutation = useMutation({
-    mutationFn: createStaffOrder,
-    onSuccess: () => {
-      toast.success('Order sent to kitchen');
-      queryClient.invalidateQueries({ queryKey: ['restaurant-orders'] });
-      setSelectedItemId('');
-    },
-    onError: () => toast.error('Order requires a checked-in guest with an open folio')
+  const guestsQuery = useQuery({
+    queryKey: ['restaurant-guests', propertyId],
+    queryFn: () => listGuests({ propertyId, limit: 200 }),
+  });
+  const roomsQuery = useQuery({
+    queryKey: ['restaurant-rooms', propertyId],
+    queryFn: () => listRooms({ propertyId, limit: 200 }),
   });
 
   return (
     <div>
-      <PageHeader title="Restaurant" breadcrumb={['Workspace', 'Restaurant']} actions={<span className="flex items-center gap-2 rounded-lg border border-slate-200 px-4 py-2 text-sm font-semibold dark:border-slate-800"><QrCode className="h-4 w-4" />QR ordering ready</span>} />
-      <Toolbar search={search} onSearch={setSearch}>
-        <select value={propertyId} onChange={(event) => setPropertyId(event.target.value)} className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm dark:border-slate-800 dark:bg-slate-950">
+      <PageHeader
+        title="Restaurant"
+        breadcrumb={['Workspace', 'Restaurant']}
+        actions={
+          <span className="flex items-center gap-2 rounded-2xl border border-slate-200 px-4 py-2 text-sm font-semibold dark:border-slate-800">
+            <QrCode className="h-4 w-4 text-lime-700" />
+            QR ordering ready
+          </span>
+        }
+      />
+
+      {/* ── Property filter + Tab switcher ── */}
+      <div className="mb-6 flex flex-col gap-3 rounded-2xl border border-slate-200/80 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-900 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex gap-1 rounded-xl bg-slate-100 p-1 dark:bg-slate-800">
+          <TabBtn active={tab === 'orders'} onClick={() => setTab('orders')}>
+            <Utensils className="h-4 w-4" /> Take Orders
+          </TabBtn>
+          {canManage && (
+            <TabBtn active={tab === 'setup'} onClick={() => setTab('setup')}>
+              <Settings2 className="h-4 w-4" /> Setup & Menu
+            </TabBtn>
+          )}
+        </div>
+        <select
+          value={propertyId}
+          onChange={(e) => setPropertyId(e.target.value)}
+          className="h-11 rounded-2xl border border-slate-200 bg-white px-4 text-sm outline-none ring-lime-700 focus:ring-2 dark:border-slate-800 dark:bg-slate-950"
+        >
           <option value="">All properties</option>
-          {properties.data?.map((property) => <option key={property._id} value={property._id}>{property.name}</option>)}
+          {propertiesQuery.data?.map((p) => (
+            <option key={p._id} value={p._id}>{p.name}</option>
+          ))}
         </select>
-      </Toolbar>
+      </div>
 
-      <section className="grid gap-4 xl:grid-cols-2">
-        <form className="rounded-lg border border-slate-200 bg-white p-4 dark:border-slate-800 dark:bg-slate-900" onSubmit={(event) => {
-          event.preventDefault();
-          const form = new FormData(event.currentTarget);
-          categoryMutation.mutate({
-            propertyId: String(form.get('propertyId')),
-            name: String(form.get('name')),
-            description: String(form.get('description')),
-            displayOrder: Number(form.get('displayOrder') || 0)
-          });
-          event.currentTarget.reset();
-        }}>
-          <h2 className="mb-3 font-semibold">Menu category</h2>
-          <div className="grid gap-3 md:grid-cols-2">
-            <select name="propertyId" required className="rounded-lg border border-slate-200 bg-white px-3 py-2 dark:border-slate-800 dark:bg-slate-950">
-              <option value="">Property</option>
-              {properties.data?.map((property) => <option key={property._id} value={property._id}>{property.name}</option>)}
-            </select>
-            <input name="name" required placeholder="Category name" className="rounded-lg border border-slate-200 px-3 py-2 dark:border-slate-800 dark:bg-slate-950" />
-            <input name="description" placeholder="Description" className="rounded-lg border border-slate-200 px-3 py-2 dark:border-slate-800 dark:bg-slate-950" />
-            <input name="displayOrder" type="number" min="0" placeholder="Display order" className="rounded-lg border border-slate-200 px-3 py-2 dark:border-slate-800 dark:bg-slate-950" />
-          </div>
-          <button className="mt-3 flex items-center gap-2 rounded-lg bg-slate-950 px-4 py-2 text-sm font-semibold text-white dark:bg-white dark:text-slate-950"><Plus className="h-4 w-4" />Save category</button>
-        </form>
-
-        <form className="rounded-lg border border-slate-200 bg-white p-4 dark:border-slate-800 dark:bg-slate-900" onSubmit={(event) => {
-          event.preventDefault();
-          const form = new FormData(event.currentTarget);
-          itemMutation.mutate({
-            propertyId: String(form.get('propertyId')),
-            categoryId: String(form.get('categoryId')),
-            name: String(form.get('name')),
-            description: String(form.get('description')),
-            price: Number(form.get('price')),
-            preparationMinutes: Number(form.get('preparationMinutes') || 20),
-            isAvailable: true
-          });
-          event.currentTarget.reset();
-        }}>
-          <h2 className="mb-3 font-semibold">Menu item</h2>
-          <div className="grid gap-3 md:grid-cols-2">
-            <select name="propertyId" required className="rounded-lg border border-slate-200 bg-white px-3 py-2 dark:border-slate-800 dark:bg-slate-950">
-              <option value="">Property</option>
-              {properties.data?.map((property) => <option key={property._id} value={property._id}>{property.name}</option>)}
-            </select>
-            <select name="categoryId" required className="rounded-lg border border-slate-200 bg-white px-3 py-2 dark:border-slate-800 dark:bg-slate-950">
-              <option value="">Category</option>
-              {categories.data?.map((category) => <option key={category._id} value={category._id}>{category.name}</option>)}
-            </select>
-            <input name="name" required placeholder="Item name" className="rounded-lg border border-slate-200 px-3 py-2 dark:border-slate-800 dark:bg-slate-950" />
-            <input name="price" required type="number" min="0" placeholder="Price" className="rounded-lg border border-slate-200 px-3 py-2 dark:border-slate-800 dark:bg-slate-950" />
-            <input name="preparationMinutes" type="number" min="0" placeholder="Prep minutes" className="rounded-lg border border-slate-200 px-3 py-2 dark:border-slate-800 dark:bg-slate-950" />
-            <input name="description" placeholder="Description" className="rounded-lg border border-slate-200 px-3 py-2 dark:border-slate-800 dark:bg-slate-950" />
-          </div>
-          <button className="mt-3 flex items-center gap-2 rounded-lg bg-lime-700 px-4 py-2 text-sm font-semibold text-white"><Plus className="h-4 w-4" />Save item</button>
-        </form>
-      </section>
-
-      <section className="mt-6 grid gap-6 xl:grid-cols-[0.95fr_1.05fr]">
-        <div>
-          <h2 className="mb-3 font-semibold">Menu</h2>
-          {menuItems.isLoading ? <Skeleton className="h-64" /> : menuItems.data?.items.length ? (
-            <DataTable<MenuItem> rows={menuItems.data.items} columns={[
-              { header: 'Item', cell: (item) => item.name },
-              { header: 'Price', cell: (item) => money.format(item.price) },
-              { header: 'Prep', cell: (item) => `${item.preparationMinutes} min` },
-              { header: 'Available', cell: (item) => item.isAvailable ? 'Yes' : 'No' }
-            ]} />
-          ) : <EmptyState title="No menu items" message="Create menu items for guests and reception ordering." />}
-        </div>
-
-        <div>
-          <h2 className="mb-3 font-semibold">Manual order</h2>
-          <form className="mb-4 grid gap-3 rounded-lg border border-slate-200 bg-white p-4 dark:border-slate-800 dark:bg-slate-900 md:grid-cols-2" onSubmit={(event) => {
-            event.preventDefault();
-            const form = new FormData(event.currentTarget);
-            orderMutation.mutate({
-              propertyId: String(form.get('propertyId')),
-              guestId: String(form.get('guestId')),
-              roomId: String(form.get('roomId')),
-              items: [{ menuItemId: selectedItemId, quantity: Number(form.get('quantity')) }]
-            });
-          }}>
-            <select name="propertyId" required onChange={(event) => setPropertyId(event.target.value)} className="rounded-lg border border-slate-200 bg-white px-3 py-2 dark:border-slate-800 dark:bg-slate-950">
-              <option value="">Property</option>
-              {properties.data?.map((property) => <option key={property._id} value={property._id}>{property.name}</option>)}
-            </select>
-            <select name="guestId" required className="rounded-lg border border-slate-200 bg-white px-3 py-2 dark:border-slate-800 dark:bg-slate-950">
-              <option value="">Guest</option>
-              {guests.data?.items.map((guest) => <option key={guest._id} value={guest._id}>{guest.fullName}</option>)}
-            </select>
-            <select name="roomId" className="rounded-lg border border-slate-200 bg-white px-3 py-2 dark:border-slate-800 dark:bg-slate-950">
-              <option value="">Room</option>
-              {rooms.data?.items.map((room) => <option key={room._id} value={room._id}>{room.roomNumber}</option>)}
-            </select>
-            <select value={selectedItemId} onChange={(event) => setSelectedItemId(event.target.value)} required className="rounded-lg border border-slate-200 bg-white px-3 py-2 dark:border-slate-800 dark:bg-slate-950">
-              <option value="">Menu item</option>
-              {menuItems.data?.items.map((item) => <option key={item._id} value={item._id}>{item.name}</option>)}
-            </select>
-            <input name="quantity" required type="number" min="1" defaultValue="1" className="rounded-lg border border-slate-200 px-3 py-2 dark:border-slate-800 dark:bg-slate-950" />
-            <button className="rounded-lg bg-lime-700 px-4 py-2 font-semibold text-white">Send order</button>
-          </form>
-          {orders.data?.items.length ? (
-            <DataTable rows={orders.data.items} columns={[
-              { header: 'Order', cell: (order) => order.orderNumber },
-              { header: 'Status', cell: (order) => order.status },
-              { header: 'Items', cell: (order) => order.items.map((item) => `${item.quantity}x ${item.name}`).join(', ') },
-              { header: 'Total', cell: (order) => money.format(order.totalAmount) }
-            ]} />
-          ) : <EmptyState title="No orders yet" message="Guest and reception orders will appear here." />}
-        </div>
-      </section>
-
-      <section className="mt-6">
-        <h2 className="mb-3 font-semibold">Room QR links</h2>
-        {propertyId ? (
-          <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
-            {rooms.data?.items.map((room) => {
-              const url = `/guest-portal/${propertyId}/${room._id}`;
-              return (
-                <article key={room._id} className="rounded-lg border border-slate-200 bg-white p-4 dark:border-slate-800 dark:bg-slate-900">
-                  <div className="flex items-center justify-between gap-3">
-                    <div>
-                      <p className="font-semibold">Room {room.roomNumber}</p>
-                      <p className="text-sm text-slate-500 dark:text-slate-400">{room.type}</p>
-                    </div>
-                    <QrCode className="h-5 w-5 text-lime-800 dark:text-lime-300" />
-                  </div>
-                  <a className="mt-3 block truncate rounded-lg bg-slate-50 px-3 py-2 text-sm text-lime-800 dark:bg-slate-950 dark:text-lime-300" href={url} target="_blank" rel="noreferrer">
-                    {url}
-                  </a>
-                </article>
-              );
-            })}
-          </div>
-        ) : (
-          <EmptyState title="Select a property" message="Choose a property to generate room-specific guest portal links." />
+      {/* ── Tab panels ── */}
+      <AnimatePresence mode="wait">
+        {tab === 'orders' && (
+          <motion.div key="orders"
+            initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -4 }} transition={{ duration: 0.18 }}
+          >
+            <TakeOrdersTab
+              propertyId={propertyId}
+              setPropertyId={setPropertyId}
+              properties={propertiesQuery.data ?? []}
+              menuItems={menuItemsQuery.data?.items ?? []}
+              menuLoading={menuItemsQuery.isLoading}
+              orders={ordersQuery.data?.items ?? []}
+              ordersLoading={ordersQuery.isLoading}
+              guests={guestsQuery.data?.items ?? []}
+              rooms={roomsQuery.data?.items ?? []}
+            />
+          </motion.div>
         )}
-      </section>
+        {tab === 'setup' && canManage && (
+          <motion.div key="setup"
+            initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -4 }} transition={{ duration: 0.18 }}
+          >
+            <SetupTab
+              properties={propertiesQuery.data ?? []}
+            />
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
+
+// ─── Tab 1: Take Orders ──────────────────────────────────────────────────────
+function TakeOrdersTab({
+  propertyId, setPropertyId, properties,
+  menuItems, menuLoading,
+  orders, ordersLoading,
+  guests, rooms,
+}: {
+  propertyId: string;
+  setPropertyId: (id: string) => void;
+  properties: Array<{ _id: string; name: string }>;
+  menuItems: MenuItem[];
+  menuLoading: boolean;
+  orders: RestaurantOrder[];
+  ordersLoading: boolean;
+  guests: Array<{ _id: string; fullName: string }>;
+  rooms: Array<{ _id: string; roomNumber: string }>;
+}) {
+  const queryClient = useQueryClient();
+  const [selectedItem, setSelectedItem] = useState<MenuItem | null>(null);
+  const [qty, setQty] = useState(1);
+  const orderFormRef = useRef<HTMLFormElement>(null);
+
+  const orderMutation = useMutation({
+    mutationFn: createStaffOrder,
+    onSuccess: () => {
+      toast.success('Order sent to kitchen!');
+      queryClient.invalidateQueries({ queryKey: ['restaurant-orders'] });
+      setSelectedItem(null);
+      setQty(1);
+      orderFormRef.current?.reset();
+    },
+    onError: () => toast.error('Order requires a checked-in guest with an open folio'),
+  });
+
+  function handleOrderSubmit(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+    if (!selectedItem) { toast.error('Select a menu item first'); return; }
+    const fd = new FormData(e.currentTarget);
+    orderMutation.mutate({
+      propertyId: String(fd.get('propertyId')),
+      guestId:    String(fd.get('guestId')),
+      roomId:     String(fd.get('roomId')) || undefined,
+      items: [{ menuItemId: selectedItem._id, quantity: qty }],
+    });
+  }
+
+  return (
+    <div className="grid gap-6 xl:grid-cols-[1fr_420px]">
+      {/* ── LEFT: Menu card grid ── */}
+      <div>
+        <h2 className="mb-4 flex items-center gap-2 text-base font-semibold text-slate-900 dark:text-white">
+          <ChefHat className="h-5 w-5 text-lime-700" /> Menu
+        </h2>
+        {menuLoading ? (
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+            {Array.from({ length: 6 }).map((_, i) => <Skeleton key={i} className="h-28" />)}
+          </div>
+        ) : menuItems.length ? (
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+            {menuItems.map((item) => (
+              <MenuCard
+                key={item._id}
+                item={item}
+                selected={selectedItem?._id === item._id}
+                onClick={() => { setSelectedItem(item); setQty(1); }}
+              />
+            ))}
+          </div>
+        ) : (
+          <EmptyState
+            title="No menu items yet"
+            message="Switch to Setup & Menu tab to add dishes and categories."
+          />
+        )}
+      </div>
+
+      {/* ── RIGHT: Order panel + live orders ── */}
+      <div className="flex flex-col gap-6">
+        {/* Order form */}
+        <div className="rounded-2xl border border-slate-200/80 bg-white shadow-[0_18px_45px_rgba(15,23,42,0.07)] dark:border-slate-800 dark:bg-slate-900">
+          <div className="flex items-center gap-2 border-b border-slate-100 px-5 py-4 dark:border-slate-800">
+            <ShoppingCart className="h-5 w-5 text-lime-700" />
+            <h2 className="text-base font-semibold text-slate-900 dark:text-white">Place Order</h2>
+          </div>
+          <form ref={orderFormRef} onSubmit={handleOrderSubmit} className="space-y-4 p-5">
+            {/* Selected item preview */}
+            <div className={`rounded-xl border-2 px-4 py-3 text-sm transition-colors ${
+              selectedItem
+                ? 'border-lime-400 bg-lime-50 dark:border-lime-700 dark:bg-lime-950/40'
+                : 'border-dashed border-slate-200 bg-slate-50 dark:border-slate-700 dark:bg-slate-800/30'
+            }`}>
+              {selectedItem ? (
+                <div className="flex items-start justify-between gap-2">
+                  <div>
+                    <p className="font-semibold text-slate-900 dark:text-white">{selectedItem.name}</p>
+                    <p className="text-xs text-slate-500 dark:text-slate-400">
+                      {money.format(selectedItem.price)} · {selectedItem.preparationMinutes} min prep
+                    </p>
+                  </div>
+                  <button type="button" onClick={() => setSelectedItem(null)}
+                    className="text-xs font-semibold text-red-500 hover:text-red-600">
+                    Clear
+                  </button>
+                </div>
+              ) : (
+                <p className="text-center text-slate-400 dark:text-slate-500">
+                  ← Click a menu item to select it
+                </p>
+              )}
+            </div>
+
+            {/* Qty stepper */}
+            <div>
+              <label className="mb-1.5 block text-xs font-semibold text-slate-600 dark:text-slate-400">Quantity</label>
+              <div className="flex items-center gap-3">
+                <button type="button" onClick={() => setQty((q) => Math.max(1, q - 1))}
+                  className="flex h-9 w-9 items-center justify-center rounded-xl border border-slate-200 text-lg font-bold transition hover:bg-slate-100 dark:border-slate-700 dark:hover:bg-slate-800">
+                  −
+                </button>
+                <span className="w-10 text-center text-lg font-semibold text-slate-900 dark:text-white">{qty}</span>
+                <button type="button" onClick={() => setQty((q) => q + 1)}
+                  className="flex h-9 w-9 items-center justify-center rounded-xl border border-slate-200 text-lg font-bold transition hover:bg-slate-100 dark:border-slate-700 dark:hover:bg-slate-800">
+                  +
+                </button>
+                {selectedItem && (
+                  <span className="ml-auto text-sm font-semibold text-lime-700 dark:text-lime-400">
+                    = {money.format(selectedItem.price * qty)}
+                  </span>
+                )}
+              </div>
+            </div>
+
+            <OField label="Property" required>
+              <select name="propertyId" required value={propertyId}
+                onChange={(e) => setPropertyId(e.target.value)} className={selectCls}>
+                <option value="">Select property…</option>
+                {properties.map((p) => <option key={p._id} value={p._id}>{p.name}</option>)}
+              </select>
+            </OField>
+
+            <OField label="Guest" required>
+              <select name="guestId" required className={selectCls} disabled={!propertyId}>
+                <option value="">{propertyId ? 'Select guest…' : 'Select property first'}</option>
+                {guests.map((g) => <option key={g._id} value={g._id}>{g.fullName}</option>)}
+              </select>
+            </OField>
+
+            <OField label="Room (optional)">
+              <select name="roomId" className={selectCls} disabled={!propertyId}>
+                <option value="">No room / dine-in</option>
+                {rooms.map((r) => <option key={r._id} value={r._id}>Room {r.roomNumber}</option>)}
+              </select>
+            </OField>
+
+            <button type="submit" disabled={orderMutation.isPending || !selectedItem}
+              className="flex w-full items-center justify-center gap-2 rounded-2xl bg-lime-700 py-2.5 text-sm font-semibold text-white shadow-lg shadow-lime-700/20 transition hover:bg-lime-800 disabled:opacity-50">
+              {orderMutation.isPending
+                ? <><Loader2 className="h-4 w-4 animate-spin" />Sending…</>
+                : <><ShoppingCart className="h-4 w-4" />Send to Kitchen</>}
+            </button>
+          </form>
+        </div>

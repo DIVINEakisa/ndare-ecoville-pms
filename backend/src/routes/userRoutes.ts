@@ -1,8 +1,8 @@
 import { Router } from 'express';
 import {
   createUserController,
-  deactivateUserController,
-  listUsersController
+  listUsersController,
+  toggleUserStatusController
 } from '../controllers/userController.js';
 import { asyncHandler } from '../middleware/asyncHandler.js';
 import { authenticate } from '../middleware/authenticate.js';
@@ -17,4 +17,4 @@ userRoutes.use(authenticate, authorizeRoles('Owner'));
 
 userRoutes.get('/',   asyncHandler(listUsersController));
 userRoutes.post('/',  validate(createUserSchema), asyncHandler(createUserController));
-userRoutes.patch('/:id/deactivate', validate(userIdSchema), asyncHandler(deactivateUserController));
+userRoutes.patch('/:id/toggle-status', validate(userIdSchema), asyncHandler(toggleUserStatusController));
