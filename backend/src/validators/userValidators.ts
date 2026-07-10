@@ -10,3 +10,9 @@ export const createUserSchema = z.object({
     propertyId: objectId
   })
 });
+
+export const userIdSchema = z.object({
+  params: z.object({
+    id: objectId
+  })
+});

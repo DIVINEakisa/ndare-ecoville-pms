@@ -19,8 +19,9 @@ export async function login(input: { email: string; password: string; ipAddress?
     throw new AppError(401, 'Invalid email or password', 'INVALID_CREDENTIALS');
   }
 
-  user.lastLoginAt = new Date();
-  await user.save();
+  // Use updateOne so we never risk writing a stale in-memory document back over a
+  // freshly-reset passwordHash that was set via a separate updateOne call
+  await User.updateOne({ _id: user._id }, { lastLoginAt: new Date() });
 
   const accessToken = signAccessToken(user);
   const refreshToken = await issueRefreshToken(String(user._id), {
@@ -92,12 +93,16 @@ export async function resetPassword(input: { token: string; password: string }) 
     throw new AppError(400, 'Password reset token is invalid or expired', 'INVALID_RESET_TOKEN');
   }
 
+  // Hash once and update directly — never load+save the user document to avoid
+  // stale in-memory state overwriting this new hash on concurrent requests
   await User.updateOne(
     { _id: resetToken.userId },
     { passwordHash: await bcrypt.hash(input.password, env.BCRYPT_ROUNDS) }
   );
+
+  // Revoke all active sessions so the new password takes effect immediately
   await RefreshToken.updateMany({ userId: resetToken.userId }, { revokedAt: new Date() });
 
-  resetToken.usedAt = new Date();
-  await resetToken.save();
+  // Hard-delete the token so it can never be replayed
+  await PasswordResetToken.deleteOne({ _id: resetToken._id });
 }

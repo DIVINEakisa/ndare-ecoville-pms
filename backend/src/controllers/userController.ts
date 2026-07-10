@@ -1,7 +1,7 @@
 import type { Request, Response } from 'express';
 import { sendStaffInvitationEmail } from '../services/emailService.js';
-import { createStaffUser, listUsers } from '../services/userService.js';
-import { created, ok } from '../utils/apiResponse.js';
+import { createStaffUser, deactivateStaffUser, listUsers } from '../services/userService.js';
+import { ok, created } from '../utils/apiResponse.js';
 
 export async function listUsersController(_req: Request, res: Response) {
   const users = await listUsers();
@@ -30,4 +30,12 @@ export async function createUserController(req: Request, res: Response) {
   }
 
   return created(res, result.user, 'Staff account created');
+}
+
+export async function deactivateUserController(req: Request, res: Response) {
+  const deactivated = await deactivateStaffUser(
+    req.params.id,
+    req.user!.id   // guaranteed by authenticate middleware
+  );
+  return ok(res, deactivated, `${deactivated.fullName} has been deactivated`);
 }

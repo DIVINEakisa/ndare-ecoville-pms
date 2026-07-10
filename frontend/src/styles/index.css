@@ -41,3 +41,28 @@ button {
     box-shadow 180ms ease,
     transform 180ms ease;
 }
+
+/* ─── Sidebar nav scrollbar — slim, dark-themed, brand-accented ─────────── */
+.sidebar-nav {
+  /* Firefox */
+  scrollbar-width: thin;
+  scrollbar-color: rgba(163, 230, 53, 0.25) transparent; /* lime thumb / transparent track */
+}
+
+/* Chrome, Safari, Edge */
+.sidebar-nav::-webkit-scrollbar {
+  width: 4px;
+}
+
+.sidebar-nav::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.sidebar-nav::-webkit-scrollbar-thumb {
+  background-color: rgba(163, 230, 53, 0.2); /* soft lime-300 tint */
+  border-radius: 999px;
+}
+
+.sidebar-nav::-webkit-scrollbar-thumb:hover {
+  background-color: rgba(163, 230, 53, 0.45); /* slightly brighter on hover */
+}

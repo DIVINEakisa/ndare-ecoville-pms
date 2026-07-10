@@ -55,6 +55,9 @@ const UsersPage = lazy(() =>
 const LandingPage = lazy(() =>
   import('../features/marketing/LandingPage').then((module) => ({ default: module.LandingPage }))
 );
+const ResetPasswordPage = lazy(() =>
+  import('../features/auth/ResetPasswordPage').then((module) => ({ default: module.ResetPasswordPage }))
+);
 
 function RouteFallback() {
   return (
@@ -76,6 +79,7 @@ export function AppRouter() {
         <Routes>
           <Route path="/" element={<LandingPage />} />
           <Route path="/login" element={<LoginPage />} />
+          <Route path="/reset-password" element={<ResetPasswordPage />} />
           <Route element={<GuestPortalLayout />}>
             <Route path="/guest-portal/:propertyId/:roomId" element={<GuestPortalPage />} />
             <Route path="/guest-portal/demo" element={<GuestPortalPage />} />

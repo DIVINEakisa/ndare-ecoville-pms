@@ -13,6 +13,12 @@ export type CreateStaffUserResponse = {
   temporaryPassword: string;
 };
 
+export type DeactivateStaffResponse = {
+  id: string;
+  fullName: string;
+  email: string;
+};
+
 export async function listStaffUsers() {
   const { data } = await apiClient.get<ApiResponse<StaffUser[]>>('/users');
   return data.data;
@@ -20,5 +26,12 @@ export async function listStaffUsers() {
 
 export async function createStaffUser(input: CreateStaffUserInput) {
   const { data } = await apiClient.post<ApiResponse<CreateStaffUserResponse>>('/users', input);
+  return data.data;
+}
+
+export async function deactivateStaffUser(userId: string) {
+  const { data } = await apiClient.patch<ApiResponse<DeactivateStaffResponse>>(
+    `/users/${userId}/deactivate`
+  );
   return data.data;
 }

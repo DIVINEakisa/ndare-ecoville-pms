@@ -20,13 +20,7 @@ export function LoginPage() {
   const location = useLocation();
   const { signIn, accessToken } = useAuth();
 
-  // Already authenticated — send to dashboard
-  if (accessToken) {
-    const nextPath =
-      (location.state as { from?: { pathname?: string } })?.from?.pathname ??
-      '/dashboard';
-    return <Navigate to={nextPath} replace />;
-  }
+  // All hooks must be called before any conditional return
   const {
     register,
     handleSubmit,
@@ -35,6 +29,14 @@ export function LoginPage() {
     resolver: zodResolver(schema),
     defaultValues: { email: "", password: "" },
   });
+
+  // Already authenticated — redirect after all hooks have been called
+  if (accessToken) {
+    const nextPath =
+      (location.state as { from?: { pathname?: string } })?.from?.pathname ??
+      '/dashboard';
+    return <Navigate to={nextPath} replace />;
+  }
 
   const onSubmit = handleSubmit(async (values) => {
     try {

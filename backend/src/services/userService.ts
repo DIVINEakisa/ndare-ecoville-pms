@@ -3,6 +3,7 @@ import crypto from 'crypto';
 import { env } from '../config/env.js';
 import { PasswordResetToken } from '../models/PasswordResetToken.js';
 import { Property } from '../models/Property.js';
+import { RefreshToken } from '../models/RefreshToken.js';
 import { User } from '../models/User.js';
 import type { UserRole } from '../types/roles.js';
 import { AppError } from '../utils/AppError.js';
@@ -62,4 +63,31 @@ export async function createStaffUser(input: {
     .lean();
 
   return { user: populated, invitationUrl };
+}
+
+export async function deactivateStaffUser(targetId: string, requesterId: string) {
+  // Prevent self-deactivation
+  if (targetId === requesterId) {
+    throw new AppError(400, 'You cannot deactivate your own account', 'SELF_DEACTIVATION');
+  }
+
+  const user = await User.findOne({ _id: targetId, deletedAt: null });
+  if (!user) throw new AppError(404, 'Staff member not found', 'USER_NOT_FOUND');
+
+  // Soft-deactivate: keeps audit trail, blocks login immediately
+  await User.updateOne(
+    { _id: targetId },
+    { isActive: false, updatedBy: requesterId }
+  );
+
+  // Revoke all active sessions so they are kicked out immediately
+  await RefreshToken.updateMany(
+    { userId: targetId, revokedAt: null },
+    { revokedAt: new Date() }
+  );
+
+  // Invalidate any pending activation / password-reset tokens
+  await PasswordResetToken.deleteMany({ userId: targetId });
+
+  return { id: targetId, fullName: user.fullName, email: user.email };
 }
