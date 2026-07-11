@@ -49,6 +49,9 @@ const ReportsPage = lazy(() =>
 const SettingsPage = lazy(() =>
   import('../features/admin/SettingsPage').then((module) => ({ default: module.SettingsPage }))
 );
+const QRManagementPage = lazy(() =>
+  import('../features/admin/QRManagementPage').then((module) => ({ default: module.QRManagementPage }))
+);
 const UsersPage = lazy(() =>
   import('../features/users/UsersPage').then((module) => ({ default: module.UsersPage }))
 );
@@ -104,6 +107,7 @@ export function AppRouter() {
               <Route path="/notifications" element={<NotificationsPage />} />
               <Route path="/reports" element={<ReportsPage />} />
               <Route path="/settings" element={<SettingsPage />} />
+              <Route path="/qr-management" element={<QRManagementPage />} />
               <Route element={<OwnerRoute />}>
                 <Route path="/dashboard/users" element={<UsersPage />} />
               </Route>

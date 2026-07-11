@@ -10,6 +10,7 @@ import {
   Home,
   Menu,
   Package,
+  QrCode,
   Search,
   Settings,
   Soup,
@@ -133,6 +134,12 @@ const ALL_NAV_GROUPS: NavGroup[] = [
         href: '/dashboard/users',
         icon: UserCog,
         roles: ['Owner']
+      },
+      {
+        label: 'QR Management',
+        href: '/qr-management',
+        icon: QrCode,
+        roles: ['Owner', 'Admin', 'Property Manager']
       },
       {
         label: 'Reports',
