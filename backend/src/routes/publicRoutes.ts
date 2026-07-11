@@ -1,26 +1,28 @@
 import { Router } from 'express';
 import {
+  listPublicOrdersController,
   placePublicOrderController,
   publicMenuController,
-  publicOrderStatusController
+  publicOrderStatusController,
+  updatePublicOrderStatusController
 } from '../controllers/publicOrderController.js';
-import { asyncHandler } from '../middleware/asyncHandler.js';
-import { validate }     from '../middleware/validate.js';
+import { asyncHandler }  from '../middleware/asyncHandler.js';
+import { authenticate }  from '../middleware/authenticate.js';
+import { validate }      from '../middleware/validate.js';
 import {
   placePublicOrderSchema,
   publicMenuSchema,
-  publicOrderStatusSchema
+  publicOrderStatusSchema,
+  publicOrderUpdateSchema,
+  publicQueueSchema
 } from '../validators/publicOrderValidators.js';
 
-/**
- * Public routes — no authentication required.
- * Rate limiting is inherited from the global limiter in app.ts.
- */
 export const publicRoutes = Router();
 
-// GET  /api/public/:propertyId/menu        — fetch available menu for the QR page
-// POST /api/public/:propertyId/orders      — place a walk-in / table order
-// GET  /api/public/orders/:orderId/status  — poll order status after placement
+// ── Guest-facing (no auth) ────────────────────────────────────────────────────
+// GET  /api/public/:propertyId/menu
+// POST /api/public/:propertyId/orders
+// GET  /api/public/orders/:orderId/status
 
 publicRoutes.get(
   '/:propertyId/menu',
@@ -38,4 +40,22 @@ publicRoutes.get(
   '/orders/:orderId/status',
   validate(publicOrderStatusSchema),
   asyncHandler(publicOrderStatusController)
+);
+
+// ── Staff-facing (auth required) ──────────────────────────────────────────────
+// GET   /api/public/:propertyId/queue          — list active walk-in orders
+// PATCH /api/public/orders/:orderId/status     — advance order status
+
+publicRoutes.get(
+  '/:propertyId/queue',
+  authenticate,
+  validate(publicQueueSchema),
+  asyncHandler(listPublicOrdersController)
+);
+
+publicRoutes.patch(
+  '/orders/:orderId/status',
+  authenticate,
+  validate(publicOrderUpdateSchema),
+  asyncHandler(updatePublicOrderStatusController)
 );

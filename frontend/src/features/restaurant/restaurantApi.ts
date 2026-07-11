@@ -84,6 +84,34 @@ export async function updateOrderStatus(input: { id: string; status: RestaurantO
   return data.data;
 }
 
+// ─── Public / walk-in orders (staff view) ────────────────────────────────────
+
+export type PublicOrder = {
+  _id: string;
+  orderNumber: string;
+  guestName: string;
+  locationType: 'room' | 'table';
+  locationNumber: string;
+  status: 'Received' | 'Preparing' | 'Ready' | 'Delivered' | 'Cancelled';
+  items: Array<{ name: string; quantity: number; unitPrice: number; total: number }>;
+  totalAmount: number;
+  notes?: string;
+  createdAt: string;
+};
+
+export async function listPublicOrders(propertyId: string) {
+  const { data } = await apiClient.get<ApiResponse<PublicOrder[]>>(`/public/${propertyId}/queue`);
+  return data.data;
+}
+
+export async function updatePublicOrderStatus(input: { id: string; status: PublicOrder['status'] }) {
+  const { data } = await apiClient.patch<ApiResponse<PublicOrder>>(
+    `/public/orders/${input.id}/status`,
+    { status: input.status }
+  );
+  return data.data;
+}
+
 export async function getGuestPortal(propertyId: string, roomId: string) {
   const { data } = await apiClient.get<ApiResponse<{
     room: Pick<Room, '_id' | 'roomNumber' | 'name' | 'type'>;

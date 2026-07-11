@@ -129,3 +129,31 @@ export async function getPublicOrderStatus(orderId: string) {
   if (!order) throw new AppError(404, 'Order not found', 'ORDER_NOT_FOUND');
   return order;
 }
+
+// ─── staff: list public orders ────────────────────────────────────────────────
+
+export async function listPublicOrders(propertyId: string) {
+  return PublicOrder.find({
+    propertyId,
+    status: { $nin: ['Delivered', 'Cancelled'] }
+  })
+    .sort({ createdAt: 1 }) // oldest first so kitchen sees what came in first
+    .lean();
+}
+
+// ─── staff: update public order status ───────────────────────────────────────
+
+export async function updatePublicOrderStatus(orderId: string, status: string) {
+  const order = await PublicOrder.findById(orderId);
+  if (!order) throw new AppError(404, 'Order not found', 'ORDER_NOT_FOUND');
+
+  const allowed = ['Received', 'Preparing', 'Ready', 'Delivered', 'Cancelled'];
+  if (!allowed.includes(status)) {
+    throw new AppError(400, 'Invalid status', 'INVALID_STATUS');
+  }
+
+  order.status = status as typeof order.status;
+  await order.save();
+
+  return order;
+}
