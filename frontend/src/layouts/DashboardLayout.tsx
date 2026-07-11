@@ -181,7 +181,7 @@ function SidebarContent({
             NH
           </div>
           <div>
-            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-300">NuvraHub</p>
+            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-300">Ndare Ecoville</p>
             <p className="text-sm font-semibold leading-tight">Ndare PMS</p>
             <p className="text-xs text-slate-400">Ecoville & Property 2</p>
           </div>

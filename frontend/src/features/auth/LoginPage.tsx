@@ -61,8 +61,8 @@ export function LoginPage() {
               <Building2 className="h-5 w-5 text-lime-300" />
             </div>
             <div>
-              <p className="text-sm font-black tracking-[0.22em] text-slate-950">NUVRAHUB</p>
-              <p className="text-xs font-medium text-slate-500">Digital Products & Solutions</p>
+              <p className="text-sm font-black tracking-[0.22em] text-slate-950">NDARE ECOVILLE</p>
+              <p className="text-xs font-medium text-slate-500">Property Management System</p>
             </div>
           </Link>
         </div>

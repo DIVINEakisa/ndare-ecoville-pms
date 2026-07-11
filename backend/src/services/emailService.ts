@@ -52,11 +52,11 @@ export async function sendStaffInvitationEmail(
   await transporter!.sendMail({
     to,
     from: env.SMTP_FROM,
-    subject: "Setup your NuvraHub HMS Staff Account",
+    subject: "Setup your Ndare Ecoville PMS Staff Account",
     text: `You have been added as a ${role}. Use this link to set up your password: ${invitationUrl}`,
     html: `
       <h2>Welcome to the Team!</h2>
-      <p>You have been added to NuvraHub HMS with the role of <strong>${role}</strong>.</p>
+      <p>You have been added to Ndare Ecoville PMS with the role of <strong>${role}</strong>.</p>
       <p>Please click the secure link below to set up your password and access your workspace:</p>
       <p><a href="${invitationUrl}" style="background-color: #4d7c0f; color: white; padding: 10px 20px; text-decoration: none; border-radius: 6px; display: inline-block;">Set Up My Account</a></p>
       <small>If the button doesn't work, copy-paste this link: ${invitationUrl}</small>

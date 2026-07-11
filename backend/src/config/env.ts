@@ -17,7 +17,7 @@ const envSchema = z.object({
   SMTP_PORT: z.coerce.number().default(587),
   SMTP_USER: z.string().optional(),
   SMTP_PASS: z.string().optional(),
-  SMTP_FROM: z.string().default('NuvraHub HMS <no-reply@nuvrahub.com>'),
+  SMTP_FROM: z.string().default('Ndare Ecoville PMS <no-reply@ndareecoville.rw>'),
   CLOUDINARY_CLOUD_NAME: z.string().optional(),
   CLOUDINARY_API_KEY: z.string().optional(),
   CLOUDINARY_API_SECRET: z.string().optional()

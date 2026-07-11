@@ -124,7 +124,7 @@ export function ResetPasswordPage() {
           </div>
           <div>
             <p className="text-xs font-black uppercase tracking-[0.22em] text-lime-700">
-              NuvraHub HMS
+              Ndare Ecoville PMS
             </p>
             <p className="text-xs text-slate-400">Staff Account Setup</p>
           </div>

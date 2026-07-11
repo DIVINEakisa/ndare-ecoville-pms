@@ -117,12 +117,12 @@ async function seed() {
     );
   }
 
-  const ownerEmail = 'owner@nuvrahub.com';
+  const ownerEmail = 'owner@ndareecoville.rw';
   const ownerPassword = 'ChangeMe123!';
   await User.findOneAndUpdate(
     { email: ownerEmail },
     {
-      fullName: 'NuvraHub Owner',
+      fullName: 'Ndare Ecoville Owner',
       email: ownerEmail,
       passwordHash: await bcrypt.hash(ownerPassword, env.BCRYPT_ROUNDS),
       role: 'Owner',

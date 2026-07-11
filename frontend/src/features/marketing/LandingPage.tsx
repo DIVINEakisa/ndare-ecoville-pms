@@ -228,11 +228,11 @@ export function LandingPage() {
       <footer className="border-t border-slate-200 bg-white">
         <div className="mx-auto flex max-w-7xl flex-col gap-4 px-5 py-8 text-sm text-slate-600 sm:px-8 md:flex-row md:items-center md:justify-between">
           <p className="font-semibold text-slate-900">
-            © {new Date().getFullYear()} NuvraHub Digital Products & Solutions.
+            © {new Date().getFullYear()} Ndare Ecoville. All rights reserved.
           </p>
           <div className="flex flex-col gap-2 md:flex-row md:gap-6">
-            <a href="mailto:hello@nuvrahub.co" className="hover:text-slate-950">
-              hello@nuvrahub.co
+            <a href="mailto:info@ndareecoville.rw" className="hover:text-slate-950">
+              info@ndareecoville.rw
             </a>
             <a href="tel:+250794485969" className="hover:text-slate-950">
               +250 794 485 969
