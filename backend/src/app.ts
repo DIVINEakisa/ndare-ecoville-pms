@@ -8,10 +8,16 @@ import morgan from 'morgan';
 import { env } from './config/env.js';
 import { errorHandler, notFound } from './middleware/errorHandler.js';
 import { apiRoutes } from './routes/index.js';
+import { publicRoutes } from './routes/publicRoutes.js';
 
 export const app = express();
 
 app.use(helmet());
+
+// Public QR routes need open CORS — guests scan from any device/browser
+// This must be registered BEFORE the restricted CORS middleware below
+app.use('/api/public', cors({ origin: '*' }), publicRoutes);
+
 app.use(
   cors({
     origin: env.CLIENT_URL,
