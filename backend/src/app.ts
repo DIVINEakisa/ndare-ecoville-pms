@@ -13,6 +13,10 @@ import { publicRoutes } from './routes/publicRoutes.js';
 export const app = express();
 
 app.use(helmet());
+app.use(compression());
+app.use(cookieParser());
+app.use(express.json({ limit: '1mb' }));
+app.use(express.urlencoded({ extended: true }));
 
 // Public QR routes need open CORS — guests scan from any device/browser
 // This must be registered BEFORE the restricted CORS middleware below
@@ -32,10 +36,6 @@ app.use(
     legacyHeaders: false
   })
 );
-app.use(compression());
-app.use(cookieParser());
-app.use(express.json({ limit: '1mb' }));
-app.use(express.urlencoded({ extended: true }));
 app.use(morgan(env.NODE_ENV === 'production' ? 'combined' : 'dev'));
 
 app.get('/health', (_req, res) => {

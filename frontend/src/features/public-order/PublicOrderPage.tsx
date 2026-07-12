@@ -101,6 +101,7 @@ export function PublicOrderPage() {
     } catch (err: unknown) {
       type ErrResponse = {
         response?: {
+          status?: number;
           data?: {
             message?: string;
             code?: string;
@@ -111,22 +112,31 @@ export function PublicOrderPage() {
           };
         };
       };
-      const data = (err as ErrResponse)?.response?.data;
+      const axiosErr = err as ErrResponse;
+      const data = axiosErr?.response?.data;
 
-      // If it's a validation error, surface the first field-level message
-      // instead of the generic "Validation failed" string
-      let msg = data?.message ?? 'Could not place order. Please try again in a moment.';
-      if (data?.code === 'VALIDATION_ERROR' && data.details?.fieldErrors) {
-        const fieldMsgs = Object.entries(data.details.fieldErrors)
-          .flatMap(([field, errors]) =>
-            errors.map((e) => `${field}: ${e}`)
-          );
-        if (fieldMsgs.length > 0) msg = fieldMsgs.join(' · ');
-      }
+      let msg: string;
 
-      // No response at all — network error or server cold start
-      if (!(err as ErrResponse)?.response) {
+      // No HTTP response — network error or server cold start
+      if (!axiosErr?.response) {
         msg = 'Could not reach the server. Please wait a moment and try again.';
+      } else if (data?.code === 'VALIDATION_ERROR') {
+        // Unpack Zod field errors into a readable list
+        const fieldErrors = data.details?.fieldErrors ?? {};
+        const formErrors  = data.details?.formErrors  ?? [];
+        const allMsgs = [
+          ...formErrors,
+          ...Object.entries(fieldErrors).flatMap(([field, errors]) =>
+            errors.map((e) => {
+              // Strip the "body." prefix Zod adds to nested fields
+              const label = field.replace(/^body\./, '').replace(/\.\d+\./g, ' item ');
+              return `${label}: ${e}`;
+            })
+          )
+        ];
+        msg = allMsgs.length > 0 ? allMsgs.join(' · ') : (data.message ?? 'Validation failed');
+      } else {
+        msg = data?.message ?? 'Could not place order. Please try again.';
       }
 
       setOrderError(msg);
