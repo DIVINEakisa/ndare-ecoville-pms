@@ -22,16 +22,16 @@ export async function createUserController(req: Request, res: Response) {
     ? 'Staff account reactivated and new invitation sent'
     : 'Staff account created';
 
-  try {
-    await sendStaffInvitationEmail(
-      result.user!.email,
-      result.invitationUrl,
-      req.body.role
-    );
-    console.info(`[Invite] Email sent to ${result.user!.email} (${req.body.role}) — ${action}`);
-  } catch (emailError) {
-    console.error(`[Invite] Failed to send invitation email to ${result.user!.email}:`, emailError);
-  }
+  // Fire-and-forget — do NOT await so the HTTP response returns immediately.
+  // Email delivery happens in the background; failures are logged but never
+  // block or timeout the API response.
+  sendStaffInvitationEmail(
+    result.user!.email,
+    result.invitationUrl,
+    req.body.role
+  )
+    .then(() => console.info(`[Invite] Email sent to ${result.user!.email} (${req.body.role}) — ${action}`))
+    .catch((err) => console.error(`[Invite] Email failed for ${result.user!.email}:`, err?.message ?? err));
 
   return created(res, result.user, successMessage);
 }
