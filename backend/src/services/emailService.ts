@@ -23,7 +23,8 @@ const transporter =
 if (transporter) {
   console.info(`[Email] SMTP ready — host: ${env.SMTP_HOST} port: ${env.SMTP_PORT} user: ${env.SMTP_USER}`);
   // Verify the connection immediately on startup
-  transporter.verify((error) => {
+  const rawTransporter = transporter as unknown as { verify: (cb: (err: Error | null) => void) => void };
+  rawTransporter.verify((error) => {
     if (error) {
       console.error('[Email] SMTP connection FAILED:', error.message);
     } else {
