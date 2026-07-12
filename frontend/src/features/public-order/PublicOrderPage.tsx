@@ -511,51 +511,181 @@ function ConfirmedStep({ order }: { order: PlacedOrder }) {
     return () => clearInterval(interval);
   }, [order.orderId]);
 
-  const statusMeta: Record<string, { label: string; color: string; icon: React.ReactNode }> = {
-    Received:  { label: 'Order received',       color: 'text-amber-400',  icon: <Clock className="h-5 w-5" /> },
-    Preparing: { label: 'Being prepared',        color: 'text-blue-400',   icon: <ChefHat className="h-5 w-5" /> },
-    Ready:     { label: 'Ready — on the way!',   color: 'text-lime-400',   icon: <CheckCircle2 className="h-5 w-5" /> },
-    Delivered: { label: 'Order delivered',        color: 'text-emerald-400',icon: <CheckCircle2 className="h-5 w-5" /> },
-    Cancelled: { label: 'Order cancelled',        color: 'text-red-400',    icon: <UtensilsCrossed className="h-5 w-5" /> },
-  };
+  // Progress steps — each stage the guest can see
+  const stages: Array<{ key: string; label: string; sublabel: string }> = [
+    { key: 'Received',  label: 'Order Received',    sublabel: 'Your order is confirmed' },
+    { key: 'Preparing', label: 'Being Prepared',     sublabel: 'Our chef is cooking now' },
+    { key: 'Ready',     label: 'Ready!',             sublabel: 'Your order is on the way' },
+    { key: 'Delivered', label: 'Delivered',          sublabel: 'Enjoy your meal!' },
+  ];
 
-  const meta = statusMeta[status] ?? statusMeta['Received'];
+  const stageIndex = stages.findIndex((s) => s.key === status);
+  const currentStage = stages[stageIndex] ?? stages[0];
+
+  const isCancelled = status === 'Cancelled';
+  const isDelivered = status === 'Delivered';
 
   return (
     <div className="text-center">
-      {/* Success icon */}
+
+      {/* ── Big animated confirmation icon ── */}
       <motion.div
-        initial={{ scale: 0 }} animate={{ scale: 1 }}
-        transition={{ type: 'spring', stiffness: 260, damping: 18 }}
-        className="mx-auto mb-6 flex h-24 w-24 items-center justify-center rounded-3xl bg-lime-700/20 ring-2 ring-lime-700/50"
+        initial={{ scale: 0, rotate: -15 }}
+        animate={{ scale: 1, rotate: 0 }}
+        transition={{ type: 'spring', stiffness: 240, damping: 16 }}
+        className={`mx-auto mb-5 flex h-28 w-28 items-center justify-center rounded-3xl ring-4 ${
+          isCancelled
+            ? 'bg-red-900/30 ring-red-700/50'
+            : isDelivered
+            ? 'bg-emerald-900/30 ring-emerald-600/50'
+            : 'bg-lime-900/30 ring-lime-600/50'
+        }`}
       >
-        <CheckCircle2 className="h-12 w-12 text-lime-400" />
+        {isCancelled ? (
+          <UtensilsCrossed className="h-14 w-14 text-red-400" />
+        ) : isDelivered ? (
+          <CheckCircle2 className="h-14 w-14 text-emerald-400" />
+        ) : (
+          <ChefHat className="h-14 w-14 text-lime-400" />
+        )}
       </motion.div>
 
-      <h1 className="text-2xl font-black text-white">Order Placed!</h1>
-      <p className="mt-2 text-slate-400">
-        Your order has been sent to the kitchen. Sit back and relax.
-      </p>
-
-      {/* Order number */}
-      <div className="mt-6 rounded-2xl border border-white/10 bg-white/5 px-6 py-4">
-        <p className="text-xs font-semibold uppercase tracking-widest text-slate-500">Order Number</p>
-        <p className="mt-1 text-2xl font-black tracking-widest text-lime-400">{order.orderNumber}</p>
-      </div>
-
-      {/* Live status */}
-      <div className="mt-4 rounded-2xl border border-white/10 bg-white/5 px-6 py-4">
-        <p className="text-xs font-semibold uppercase tracking-widest text-slate-500">Live Status</p>
-        <div className={`mt-2 flex items-center justify-center gap-2 text-base font-bold ${meta.color}`}>
-          {meta.icon} {meta.label}
-        </div>
-        {status !== 'Delivered' && status !== 'Cancelled' && (
-          <p className="mt-1 text-xs text-slate-500">Updates automatically every 15 seconds</p>
+      {/* ── Main message ── */}
+      <motion.div
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.15 }}
+      >
+        {isCancelled ? (
+          <>
+            <h1 className="text-2xl font-black text-white">Order Cancelled</h1>
+            <p className="mt-2 text-slate-400">
+              Your order was cancelled. Please speak to a staff member for assistance.
+            </p>
+          </>
+        ) : isDelivered ? (
+          <>
+            <h1 className="text-2xl font-black text-white">Enjoy your meal! 🎉</h1>
+            <p className="mt-2 text-slate-400">
+              Your order has been delivered. Thank you for dining with us!
+            </p>
+          </>
+        ) : (
+          <>
+            <h1 className="text-2xl font-black text-white">
+              {currentStage.key === 'Received'
+                ? 'Order accepted!'
+                : 'Your order is being prepared!'}
+            </h1>
+            <p className="mt-2 text-slate-400">
+              {currentStage.key === 'Received'
+                ? 'We have received your order and our kitchen team is about to start.'
+                : 'Our chef is preparing your meal. It will be delivered to you shortly.'}
+            </p>
+          </>
         )}
-      </div>
+      </motion.div>
 
-      {/* Order summary */}
-      <div className="mt-4 rounded-2xl border border-white/10 bg-white/5 px-6 py-4 text-left">
+      {/* ── Live status progress bar ── */}
+      {!isCancelled && (
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.25 }}
+          className="mt-7 rounded-2xl border border-white/10 bg-white/5 p-5"
+        >
+          <p className="mb-4 text-xs font-semibold uppercase tracking-widest text-slate-500">
+            Live Order Status
+          </p>
+
+          {/* Progress steps */}
+          <div className="flex items-center justify-between gap-1">
+            {stages.map((stage, i) => {
+              const isDone    = i < stageIndex;
+              const isCurrent = i === stageIndex;
+              return (
+                <div key={stage.key} className="flex flex-1 flex-col items-center gap-1.5">
+                  {/* Step circle */}
+                  <div className={`relative flex h-9 w-9 items-center justify-center rounded-full border-2 transition-all duration-500 ${
+                    isDone
+                      ? 'border-lime-500 bg-lime-700'
+                      : isCurrent
+                      ? 'border-lime-400 bg-lime-900/50'
+                      : 'border-white/10 bg-white/5'
+                  }`}>
+                    {isDone ? (
+                      <CheckCircle2 className="h-4 w-4 text-white" />
+                    ) : isCurrent ? (
+                      <motion.div
+                        animate={{ scale: [1, 1.2, 1] }}
+                        transition={{ repeat: Infinity, duration: 1.5 }}
+                        className="h-2.5 w-2.5 rounded-full bg-lime-400"
+                      />
+                    ) : (
+                      <div className="h-2 w-2 rounded-full bg-white/20" />
+                    )}
+                  </div>
+
+                  {/* Connector line (not after last) */}
+                  {i < stages.length - 1 && (
+                    <div className="absolute" style={{ display: 'none' }} />
+                  )}
+
+                  {/* Label */}
+                  <p className={`text-[10px] font-semibold leading-tight text-center ${
+                    isDone ? 'text-lime-400' : isCurrent ? 'text-white' : 'text-slate-600'
+                  }`}>
+                    {stage.label}
+                  </p>
+                </div>
+              );
+            })}
+          </div>
+
+          {/* Horizontal connector between steps */}
+          <div className="relative -mt-[52px] mb-3 flex items-center px-5">
+            {stages.slice(0, -1).map((_, i) => (
+              <div key={i} className={`h-0.5 flex-1 transition-all duration-700 ${
+                i < stageIndex ? 'bg-lime-600' : 'bg-white/10'
+              }`} />
+            ))}
+          </div>
+
+          {/* Current stage sublabel */}
+          <div className={`mt-4 rounded-xl px-4 py-2.5 text-sm font-semibold ${
+            isDelivered
+              ? 'bg-emerald-900/30 text-emerald-300'
+              : 'bg-lime-900/30 text-lime-300'
+          }`}>
+            {currentStage.sublabel}
+          </div>
+
+          {!isDelivered && (
+            <p className="mt-2 text-xs text-slate-600">
+              Updates automatically · no need to refresh
+            </p>
+          )}
+        </motion.div>
+      )}
+
+      {/* ── Order number ── */}
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ delay: 0.3 }}
+        className="mt-4 rounded-2xl border border-white/10 bg-white/5 px-6 py-4"
+      >
+        <p className="text-xs font-semibold uppercase tracking-widest text-slate-500">Order Reference</p>
+        <p className="mt-1 text-xl font-black tracking-widest text-lime-400">{order.orderNumber}</p>
+      </motion.div>
+
+      {/* ── Order summary ── */}
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ delay: 0.35 }}
+        className="mt-4 rounded-2xl border border-white/10 bg-white/5 px-6 py-4 text-left"
+      >
         <p className="mb-3 text-xs font-semibold uppercase tracking-widest text-slate-500">Your Order</p>
         <div className="space-y-2">
           {order.items.map((item, i) => (
@@ -569,23 +699,32 @@ function ConfirmedStep({ order }: { order: PlacedOrder }) {
             <span className="text-lime-400">{money.format(order.totalAmount)}</span>
           </div>
         </div>
-      </div>
+      </motion.div>
 
-      {/* Location */}
-      <div className="mt-4 flex items-center justify-center gap-2 text-sm text-slate-400">
+      {/* ── Delivery location ── */}
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ delay: 0.4 }}
+        className="mt-4 flex items-center justify-center gap-2 text-sm text-slate-400"
+      >
         <MapPin className="h-4 w-4 text-lime-500" />
-        Delivering to <span className="font-semibold capitalize text-white ml-1">
+        Delivering to
+        <span className="font-semibold capitalize text-white">
           {order.locationType} {order.locationNumber}
         </span>
-      </div>
+      </motion.div>
 
-      {/* Place another */}
-      <button
+      {/* ── Place another order ── */}
+      <motion.button
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ delay: 0.45 }}
         onClick={() => window.location.reload()}
         className="mt-8 flex w-full items-center justify-center gap-2 rounded-2xl border border-white/10 bg-white/5 py-3.5 text-sm font-semibold text-slate-300 transition hover:bg-white/10"
       >
         <Plus className="h-4 w-4" /> Place another order
-      </button>
+      </motion.button>
     </div>
   );
 }
