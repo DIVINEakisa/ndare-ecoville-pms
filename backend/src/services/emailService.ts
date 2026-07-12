@@ -1,54 +1,43 @@
+import nodemailer from 'nodemailer';
 import { env } from '../config/env.js';
 
-const RESEND_API_URL = 'https://api.resend.com/emails';
-
-// On Resend's free plan, the only verified sender is onboarding@resend.dev
-// and it can ONLY deliver to the account owner's email address.
-// For sending to ANY recipient, you must verify a custom domain in Resend.
-// Until then, emails will only arrive if the recipient = your Resend account email.
-const FROM_ADDRESS = env.SMTP_FROM ?? 'Ndare Ecoville PMS <onboarding@resend.dev>';
-const API_KEY      = env.SMTP_PASS; // Resend API key stored in SMTP_PASS
-
-async function sendEmail(payload: {
-  to: string;
-  subject: string;
-  html: string;
-  text: string;
-}) {
-  if (!API_KEY) {
-    console.info(`[Email] SMTP_PASS (Resend API key) not set — skipping email to ${payload.to}`);
-    return;
-  }
-
-  const response = await fetch(RESEND_API_URL, {
-    method: 'POST',
-    headers: {
-      'Authorization': `Bearer ${API_KEY}`,
-      'Content-Type':  'application/json',
+// Gmail SMTP transporter — works with any recipient, no domain verification needed.
+// Requires SMTP_USER = your Gmail address, SMTP_PASS = Gmail App Password (16 chars)
+// Get app password: myaccount.google.com → Security → 2-Step Verification → App Passwords
+function createTransporter() {
+  return nodemailer.createTransport({
+    host: env.SMTP_HOST,
+    port: Number(env.SMTP_PORT),
+    secure: Number(env.SMTP_PORT) === 465,
+    auth: {
+      user: env.SMTP_USER,
+      pass: env.SMTP_PASS,
     },
-    body: JSON.stringify({
-      from:    FROM_ADDRESS,
-      to:      [payload.to],
-      subject: payload.subject,
-      html:    payload.html,
-      text:    payload.text,
-    }),
   });
+}
 
-  if (!response.ok) {
-    const error = await response.json().catch(() => ({}));
-    throw new Error(`Resend API error ${response.status}: ${JSON.stringify(error)}`);
+const transporter =
+  env.SMTP_HOST && env.SMTP_USER && env.SMTP_PASS ? createTransporter() : null;
+
+function mailerReady() {
+  if (!transporter) {
+    console.warn('[Email] SMTP not configured — emails will be skipped');
+    return false;
   }
-
-  const data = await response.json();
-  console.info(`[Email] Delivered — id: ${(data as { id?: string }).id} → ${payload.to}`);
+  return true;
 }
 
 export async function sendPasswordResetEmail(to: string, resetUrl: string) {
-  await sendEmail({
+  if (!mailerReady()) {
+    console.info(`[Email] Skipped password reset for ${to}. URL: ${resetUrl}`);
+    return;
+  }
+
+  await transporter!.sendMail({
+    from: env.SMTP_FROM,
     to,
     subject: 'Reset your Ndare Ecoville PMS password',
-    text:    `Use this secure link to reset your password: ${resetUrl}`,
+    text: `Use this secure link to reset your password: ${resetUrl}`,
     html: `
       <div style="font-family:sans-serif;max-width:520px;margin:0 auto">
         <div style="background:#3F6212;padding:24px;border-radius:12px 12px 0 0;text-align:center">
@@ -56,23 +45,20 @@ export async function sendPasswordResetEmail(to: string, resetUrl: string) {
         </div>
         <div style="background:#fff;padding:32px;border:1px solid #e5e7eb;border-radius:0 0 12px 12px">
           <h2 style="color:#0f172a;margin-top:0">Reset your password</h2>
-          <p style="color:#475569">Click the button below to set a new password for your account.</p>
+          <p style="color:#475569">Click the button below to set a new password.</p>
           <a href="${resetUrl}"
              style="display:inline-block;background:#4d7c0f;color:#fff;padding:12px 28px;border-radius:8px;text-decoration:none;font-weight:600;margin:16px 0">
             Reset Password
           </a>
-          <p style="color:#94a3b8;font-size:13px">
-            This link expires in 30 minutes.<br>
-            If you didn't request this, you can safely ignore this email.
-          </p>
+          <p style="color:#94a3b8;font-size:13px">This link expires in 30 minutes.</p>
           <p style="color:#cbd5e1;font-size:12px;margin-bottom:0">
-            Can't click the button? Copy this link:<br>
-            <span style="color:#3F6212">${resetUrl}</span>
+            Can't click the button? Copy: <span style="color:#3F6212">${resetUrl}</span>
           </p>
         </div>
       </div>
     `,
   });
+  console.info(`[Email] Password reset sent → ${to}`);
 }
 
 export async function sendStaffInvitationEmail(
@@ -80,10 +66,16 @@ export async function sendStaffInvitationEmail(
   invitationUrl: string,
   role: string,
 ) {
-  await sendEmail({
+  if (!mailerReady()) {
+    console.info(`[Email] Skipped invitation for ${to}. URL: ${invitationUrl}`);
+    return;
+  }
+
+  await transporter!.sendMail({
+    from: env.SMTP_FROM,
     to,
     subject: 'You have been invited to Ndare Ecoville PMS',
-    text:    `You have been added as ${role}. Set up your account here: ${invitationUrl}`,
+    text: `You have been added as ${role}. Set up your account: ${invitationUrl}`,
     html: `
       <div style="font-family:sans-serif;max-width:520px;margin:0 auto">
         <div style="background:#3F6212;padding:24px;border-radius:12px 12px 0 0;text-align:center">
@@ -93,25 +85,20 @@ export async function sendStaffInvitationEmail(
         <div style="background:#fff;padding:32px;border:1px solid #e5e7eb;border-radius:0 0 12px 12px">
           <h2 style="color:#0f172a;margin-top:0">Welcome to the team!</h2>
           <p style="color:#475569">
-            You have been added to <strong>Ndare Ecoville PMS</strong> with the role of
+            You have been added to <strong>Ndare Ecoville PMS</strong> as
             <strong style="color:#3F6212">${role}</strong>.
-          </p>
-          <p style="color:#475569">
-            Click the button below to set up your password and access your workspace.
           </p>
           <a href="${invitationUrl}"
              style="display:inline-block;background:#4d7c0f;color:#fff;padding:12px 28px;border-radius:8px;text-decoration:none;font-weight:600;margin:16px 0">
             Set Up My Account
           </a>
-          <p style="color:#94a3b8;font-size:13px">
-            This invitation link expires in 72 hours.
-          </p>
+          <p style="color:#94a3b8;font-size:13px">This invitation expires in 72 hours.</p>
           <p style="color:#cbd5e1;font-size:12px;margin-bottom:0">
-            Can't click the button? Copy this link:<br>
-            <span style="color:#3F6212">${invitationUrl}</span>
+            Can't click the button? Copy: <span style="color:#3F6212">${invitationUrl}</span>
           </p>
         </div>
       </div>
     `,
   });
+  console.info(`[Email] Invitation sent → ${to} (${role})`);
 }
