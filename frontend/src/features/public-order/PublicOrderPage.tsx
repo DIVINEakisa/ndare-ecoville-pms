@@ -45,6 +45,7 @@ export function PublicOrderPage() {
   const [guestInfo, setGuestInfo]     = useState<GuestInfo | null>(null);
   const [cart, setCart]               = useState<CartMap>({});
   const [placedOrder, setPlacedOrder] = useState<PlacedOrder | null>(null);
+  const [orderError, setOrderError]   = useState<string | null>(null);
 
   const menuQuery = useQuery({
     queryKey: ['public-menu', propertyId],
@@ -88,13 +89,20 @@ export function PublicOrderPage() {
       .filter(([, q]) => q > 0)
       .map(([menuItemId, quantity]) => ({ menuItemId, quantity }));
 
-    const order = await placePublicOrder(propertyId, {
-      ...guestInfo,
-      items,
-    });
-    setPlacedOrder(order);
-    setCart({});
-    setStep('confirmed');
+    try {
+      const order = await placePublicOrder(propertyId, {
+        ...guestInfo,
+        items,
+      });
+      setPlacedOrder(order);
+      setCart({});
+      setStep('confirmed');
+    } catch (err: unknown) {
+      const msg =
+        (err as { response?: { data?: { message?: string } } })?.response?.data?.message
+        ?? 'Could not place order. The server may be waking up — please try again in 30 seconds.';
+      setOrderError(msg);
+    }
   }
 
   if (!propertyId) {
@@ -165,6 +173,7 @@ export function PublicOrderPage() {
                 cartTotal={cartTotal}
                 cartCount={cartCount}
                 guestInfo={guestInfo}
+                orderError={orderError}
                 onSetQty={setQty}
                 onPlaceOrder={handlePlaceOrder}
               />
@@ -329,7 +338,7 @@ function CheckInStep({
 // ─── Step 2: Menu ─────────────────────────────────────────────────────────────
 function MenuStep({
   categories, loading, cart, cartTotal, cartCount,
-  guestInfo, onSetQty, onPlaceOrder,
+  guestInfo, orderError, onSetQty, onPlaceOrder,
 }: {
   categories: Array<{ _id: string; name: string; items: PublicMenuItem[] }>;
   loading: boolean;
@@ -337,6 +346,7 @@ function MenuStep({
   cartTotal: number;
   cartCount: number;
   guestInfo: GuestInfo;
+  orderError: string | null;
   onSetQty: (id: string, delta: number) => void;
   onPlaceOrder: () => Promise<void>;
 }) {
@@ -419,6 +429,12 @@ function MenuStep({
           >
             <div className="mx-auto max-w-2xl">
               <div className="rounded-2xl border border-lime-700/50 bg-slate-900 p-4 shadow-2xl shadow-black/60 ring-1 ring-white/5">
+                {/* Error message */}
+                {orderError && (
+                  <div className="mb-3 rounded-xl border border-red-500/30 bg-red-900/30 px-4 py-2.5 text-center text-sm font-semibold text-red-300">
+                    ⚠️ {orderError}
+                  </div>
+                )}
                 <div className="mb-3 flex items-center justify-between text-sm">
                   <span className="flex items-center gap-2 font-semibold text-slate-300">
                     <ShoppingCart className="h-4 w-4 text-lime-500" />
