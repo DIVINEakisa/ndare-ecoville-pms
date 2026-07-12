@@ -239,6 +239,7 @@ function ReservationForm({
     properties.length === 1 ? properties[0]._id : ''
   );
   const [guestId,  setGuestId]  = useState('');
+  const [guestSearch, setGuestSearch] = useState('');
   const [roomId,   setRoomId]   = useState('');
   const [checkIn,  setCheckIn]  = useState(today);
   const [checkOut, setCheckOut] = useState(tomorrow);
@@ -251,18 +252,28 @@ function ReservationForm({
   const [notes, setNotes]   = useState('');
 
   // Reset guest & room when property changes
-  useEffect(() => { setGuestId(''); setRoomId(''); }, [propertyId]);
+  useEffect(() => { setGuestId(''); setGuestSearch(''); setRoomId(''); }, [propertyId]);
 
   // Reset room when dates change (availability may differ)
   useEffect(() => { setRoomId(''); }, [checkIn, checkOut]);
 
   // ── Guests for selected property ──
   const guestsQuery = useQuery({
-    queryKey: ['form-guests', propertyId],
-    queryFn: () => listGuests({ propertyId, limit: 200 }),
+    queryKey: ['form-guests', propertyId, guestSearch],
+    queryFn: () => listGuests({ propertyId, search: guestSearch || undefined, limit: 200 }),
     enabled: Boolean(propertyId),
     staleTime: 30_000,
+    retry: 1,
   });
+
+  // Show a toast if guest fetch fails so the user knows why the list is empty
+  useEffect(() => {
+    if (guestsQuery.isError) {
+      const err = guestsQuery.error as { response?: { data?: { message?: string } } };
+      const msg = err?.response?.data?.message ?? 'Could not load guests for this property';
+      toast.error(`Guests: ${msg}`);
+    }
+  }, [guestsQuery.isError, guestsQuery.error]);
 
   // ── Available rooms for property + date range ──
   const datesValid = Boolean(propertyId && checkIn && checkOut && checkOut > checkIn);
@@ -406,26 +417,52 @@ function ReservationForm({
                 <div className={`${inputCls} flex items-center gap-2 text-slate-400`}>
                   <Loader2 className="h-4 w-4 animate-spin" /> Loading guests…
                 </div>
+              ) : guestsQuery.isError ? (
+                <div className="flex items-center gap-2">
+                  <div className={`${inputCls} flex items-center text-red-500`}>
+                    Failed to load guests
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => guestsQuery.refetch()}
+                    className="shrink-0 rounded-xl border border-slate-200 px-3 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-50 dark:border-slate-700 dark:text-slate-300"
+                  >
+                    Retry
+                  </button>
+                </div>
               ) : (
-                <select
-                  value={guestId}
-                  onChange={(e) => setGuestId(e.target.value)}
-                  required
-                  className={selectCls}
-                >
-                  <option value="">
-                    {(guestsQuery.data?.items.length ?? 0) === 0
-                      ? 'No guests — add a guest first'
-                      : 'Select guest…'}
-                  </option>
-                  {guestsQuery.data?.items.map((g) => (
-                    <option key={g._id} value={g._id}>
-                      {g.fullName}
-                      {g.phone ? ` · ${g.phone}` : ''}
-                      {g.nationality ? ` (${g.nationality})` : ''}
+                <div className="space-y-1.5">
+                  {/* Search box so receptionists can find guests quickly */}
+                  <input
+                    type="text"
+                    placeholder="Search guests by name or phone…"
+                    value={guestSearch}
+                    onChange={(e) => { setGuestSearch(e.target.value); setGuestId(''); }}
+                    className={inputCls}
+                  />
+                  <select
+                    value={guestId}
+                    onChange={(e) => setGuestId(e.target.value)}
+                    required
+                    size={Math.min((guestsQuery.data?.items.length ?? 0) + 1, 6)}
+                    className={`${selectCls} h-auto py-1`}
+                  >
+                    <option value="">
+                      {(guestsQuery.data?.items.length ?? 0) === 0
+                        ? guestSearch
+                          ? 'No guests match your search'
+                          : 'No guests — add a guest first'
+                        : '— Select guest —'}
                     </option>
-                  ))}
-                </select>
+                    {guestsQuery.data?.items.map((g) => (
+                      <option key={g._id} value={g._id}>
+                        {g.fullName}
+                        {g.phone ? ` · ${g.phone}` : ''}
+                        {g.nationality ? ` · ${g.nationality}` : ''}
+                      </option>
+                    ))}
+                  </select>
+                </div>
               )}
             </Field>
 

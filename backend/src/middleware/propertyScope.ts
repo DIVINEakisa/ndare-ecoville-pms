@@ -9,9 +9,10 @@ export function attachPropertyScope(req: Request, _res: Response, next: NextFunc
   const isGlobal = globalRoles.includes(req.user.role);
   const requestedPropertyId = typeof req.query.propertyId === 'string' ? req.query.propertyId : undefined;
   const activePropertyId = requestedPropertyId ?? req.user.activePropertyId;
-  const assignedIds = req.user.assignedPropertyIds;
+  // Normalise to strings for reliable comparison (guards against ObjectId vs string mismatch)
+  const assignedIds = req.user.assignedPropertyIds.map(String);
 
-  if (!isGlobal && activePropertyId && !assignedIds.includes(activePropertyId)) {
+  if (!isGlobal && activePropertyId && !assignedIds.includes(String(activePropertyId))) {
     throw new AppError(403, 'You cannot access another property', 'PROPERTY_FORBIDDEN');
   }
 
