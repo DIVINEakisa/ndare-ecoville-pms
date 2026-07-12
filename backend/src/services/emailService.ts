@@ -19,6 +19,21 @@ function createTransporter() {
 const transporter =
   env.SMTP_HOST && env.SMTP_USER && env.SMTP_PASS ? createTransporter() : null;
 
+// Log SMTP config at startup so we can verify it in Render logs
+if (transporter) {
+  console.info(`[Email] SMTP ready — host: ${env.SMTP_HOST} port: ${env.SMTP_PORT} user: ${env.SMTP_USER}`);
+  // Verify the connection immediately on startup
+  transporter.verify((error) => {
+    if (error) {
+      console.error('[Email] SMTP connection FAILED:', error.message);
+    } else {
+      console.info('[Email] SMTP connection verified — ready to send');
+    }
+  });
+} else {
+  console.warn('[Email] SMTP not configured — emails will be skipped');
+}
+
 function mailerReady() {
   if (!transporter) {
     console.warn('[Email] SMTP not configured — emails will be skipped');
