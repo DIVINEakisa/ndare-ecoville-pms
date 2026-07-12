@@ -260,7 +260,7 @@ function ReservationForm({
   // ── Guests for selected property ──
   const guestsQuery = useQuery({
     queryKey: ['form-guests', propertyId, guestSearch],
-    queryFn: () => listGuests({ propertyId, search: guestSearch || undefined, limit: 200 }),
+    queryFn: () => listGuests({ propertyId, search: guestSearch || undefined, limit: 100 }),
     enabled: Boolean(propertyId),
     staleTime: 30_000,
     retry: 1,
