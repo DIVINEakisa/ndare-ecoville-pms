@@ -8,6 +8,8 @@ import { MenuItem } from '../models/MenuItem.js';
 import { Reservation } from '../models/Reservation.js';
 import { RestaurantOrder } from '../models/RestaurantOrder.js';
 import { Room } from '../models/Room.js';
+import { User } from '../models/User.js';
+import { createNotification } from './notificationService.js';
 import { AppError } from '../utils/AppError.js';
 import { getPagination, paginationMeta } from '../utils/pagination.js';
 
@@ -96,10 +98,36 @@ export async function createOrder(req: Request, options: { publicPortal?: boolea
     createdBy: options.publicPortal ? undefined : req.user?.id
   });
 
-  return order.populate([
+  // Notify all Kitchen Staff at this property about the new order
+  const kitchenUsers = await User.find({
+    role: 'Kitchen Staff',
+    isActive: true,
+    assignedPropertyIds: new Types.ObjectId(propertyId)
+  }).select('_id').lean();
+
+  const itemsSummary = orderItems.map((i: { quantity: number; name: string }) => `${i.quantity}× ${i.name}`).join(', ');
+  const populatedOrder = await order.populate([
     { path: 'guestId', select: 'fullName phone' },
-    { path: 'roomId', select: 'roomNumber' }
+    { path: 'roomId',  select: 'roomNumber' }
   ]);
+
+  const guestName = (populatedOrder.guestId as unknown as { fullName?: string })?.fullName ?? 'Guest';
+
+  await Promise.all(
+    kitchenUsers.map((u) =>
+      createNotification({
+        propertyId,
+        userId:     u._id,
+        title:      `New order — ${order.orderNumber}`,
+        message:    `${guestName}: ${itemsSummary}`,
+        type:       'Info',
+        entityType: 'RestaurantOrder',
+        entityId:   order._id
+      })
+    )
+  );
+
+  return populatedOrder;
 }
 
 export async function createPortalOrder(input: {

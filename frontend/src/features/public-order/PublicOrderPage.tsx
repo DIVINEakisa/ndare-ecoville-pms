@@ -89,6 +89,7 @@ export function PublicOrderPage() {
       .filter(([, q]) => q > 0)
       .map(([menuItemId, quantity]) => ({ menuItemId, quantity }));
 
+    setOrderError(null);
     try {
       const order = await placePublicOrder(propertyId, {
         ...guestInfo,
@@ -355,6 +356,7 @@ function MenuStep({
   async function handlePlace() {
     setPlacing(true);
     try { await onPlaceOrder(); }
+    catch { /* error surfaced via orderError prop */ }
     finally { setPlacing(false); }
   }
 
@@ -393,6 +395,17 @@ function MenuStep({
         </div>
       </div>
 
+      {/* Error banner — always visible if order failed */}
+      {orderError && (
+        <motion.div
+          initial={{ opacity: 0, y: -8 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="mb-4 rounded-2xl border border-red-500/30 bg-red-900/30 px-4 py-3 text-center text-sm font-semibold text-red-300"
+        >
+          ⚠️ {orderError}
+        </motion.div>
+      )}
+
       {/* Category sections */}
       <div className="space-y-8">
         {categories.map((cat) => (
@@ -429,12 +442,6 @@ function MenuStep({
           >
             <div className="mx-auto max-w-2xl">
               <div className="rounded-2xl border border-lime-700/50 bg-slate-900 p-4 shadow-2xl shadow-black/60 ring-1 ring-white/5">
-                {/* Error message */}
-                {orderError && (
-                  <div className="mb-3 rounded-xl border border-red-500/30 bg-red-900/30 px-4 py-2.5 text-center text-sm font-semibold text-red-300">
-                    ⚠️ {orderError}
-                  </div>
-                )}
                 <div className="mb-3 flex items-center justify-between text-sm">
                   <span className="flex items-center gap-2 font-semibold text-slate-300">
                     <ShoppingCart className="h-4 w-4 text-lime-500" />

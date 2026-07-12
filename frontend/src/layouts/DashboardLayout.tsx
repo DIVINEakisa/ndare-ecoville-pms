@@ -23,7 +23,9 @@ import {
 import { motion, AnimatePresence } from 'framer-motion';
 import { useState } from 'react';
 import { NavLink, Outlet, useNavigate } from 'react-router-dom';
+import { useQuery } from '@tanstack/react-query';
 import { useAuth } from '../features/auth/AuthProvider';
+import { listNotifications } from '../features/supply/supplyApi';
 import type { UserRole } from '../types/api';
 
 // ─── Nav item definition ───────────────────────────────────────────────────
@@ -256,6 +258,15 @@ export function DashboardLayout() {
   const { user, signOut } = useAuth();
   const navigate = useNavigate();
 
+  // Poll unread notifications count so the bell badge stays current
+  const notifQuery = useQuery({
+    queryKey: ['notifications-unread'],
+    queryFn: () => listNotifications({ limit: 1, unreadOnly: true }),
+    refetchInterval: 15_000, // refresh every 15 s
+    staleTime: 10_000,
+  });
+  const unreadCount = notifQuery.data?.unread ?? 0;
+
   const toggleTheme = () => {
     document.documentElement.classList.toggle('dark');
     setDark(document.documentElement.classList.contains('dark'));
@@ -333,7 +344,11 @@ export function DashboardLayout() {
             onClick={() => navigate('/notifications')}
           >
             <Bell className="h-5 w-5" />
-            <span className="absolute right-1.5 top-1.5 h-2 w-2 rounded-full bg-lime-600" />
+            {unreadCount > 0 && (
+              <span className="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-[10px] font-bold text-white">
+                {unreadCount > 9 ? '9+' : unreadCount}
+              </span>
+            )}
           </button>
         </header>
 
@@ -371,7 +386,11 @@ export function DashboardLayout() {
             onClick={() => navigate('/notifications')}
           >
             <Bell className="h-5 w-5" />
-            <span className="absolute right-2 top-2 h-2 w-2 rounded-full bg-lime-700" />
+            {unreadCount > 0 && (
+              <span className="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-[10px] font-bold text-white">
+                {unreadCount > 9 ? '9+' : unreadCount}
+              </span>
+            )}
           </button>
 
           {/* User info */}

@@ -3,6 +3,8 @@ import { MenuCategory } from '../models/MenuCategory.js';
 import { MenuItem }     from '../models/MenuItem.js';
 import { Property }     from '../models/Property.js';
 import { PublicOrder }  from '../models/PublicOrder.js';
+import { User }         from '../models/User.js';
+import { createNotification } from './notificationService.js';
 import { AppError }     from '../utils/AppError.js';
 
 // ─── menu ─────────────────────────────────────────────────────────────────────
@@ -105,6 +107,30 @@ export async function placePublicOrder(input: PlaceOrderInput) {
     notes:          input.notes?.trim() || undefined,
     status:         'Received'
   });
+
+  // Notify all Kitchen Staff assigned to this property so they see the new order
+  const kitchenUsers = await User.find({
+    role: 'Kitchen Staff',
+    isActive: true,
+    assignedPropertyIds: new mongoose.Types.ObjectId(input.propertyId)
+  }).select('_id').lean();
+
+  const locationLabel = `${input.locationType} ${input.locationNumber.trim()}`;
+  const itemsSummary  = resolvedItems.map((i) => `${i.quantity}× ${i.name}`).join(', ');
+
+  await Promise.all(
+    kitchenUsers.map((u) =>
+      createNotification({
+        propertyId:  input.propertyId,
+        userId:      u._id,
+        title:       `New order — ${orderNumber}`,
+        message:     `${input.guestName.trim()} (${locationLabel}): ${itemsSummary}`,
+        type:        'Info',
+        entityType:  'PublicOrder',
+        entityId:    order._id
+      })
+    )
+  );
 
   return {
     orderId:        String(order._id),
