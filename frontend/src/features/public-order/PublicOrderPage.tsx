@@ -99,9 +99,36 @@ export function PublicOrderPage() {
       setCart({});
       setStep('confirmed');
     } catch (err: unknown) {
-      const msg =
-        (err as { response?: { data?: { message?: string } } })?.response?.data?.message
-        ?? 'Could not place order. The server may be waking up — please try again in 30 seconds.';
+      type ErrResponse = {
+        response?: {
+          data?: {
+            message?: string;
+            code?: string;
+            details?: {
+              fieldErrors?: Record<string, string[]>;
+              formErrors?: string[];
+            };
+          };
+        };
+      };
+      const data = (err as ErrResponse)?.response?.data;
+
+      // If it's a validation error, surface the first field-level message
+      // instead of the generic "Validation failed" string
+      let msg = data?.message ?? 'Could not place order. Please try again in a moment.';
+      if (data?.code === 'VALIDATION_ERROR' && data.details?.fieldErrors) {
+        const fieldMsgs = Object.entries(data.details.fieldErrors)
+          .flatMap(([field, errors]) =>
+            errors.map((e) => `${field}: ${e}`)
+          );
+        if (fieldMsgs.length > 0) msg = fieldMsgs.join(' · ');
+      }
+
+      // No response at all — network error or server cold start
+      if (!(err as ErrResponse)?.response) {
+        msg = 'Could not reach the server. Please wait a moment and try again.';
+      }
+
       setOrderError(msg);
     }
   }
@@ -177,6 +204,7 @@ export function PublicOrderPage() {
                 orderError={orderError}
                 onSetQty={setQty}
                 onPlaceOrder={handlePlaceOrder}
+                onClearError={() => setOrderError(null)}
               />
             </motion.div>
           )}
@@ -339,7 +367,7 @@ function CheckInStep({
 // ─── Step 2: Menu ─────────────────────────────────────────────────────────────
 function MenuStep({
   categories, loading, cart, cartTotal, cartCount,
-  guestInfo, orderError, onSetQty, onPlaceOrder,
+  guestInfo, orderError, onSetQty, onPlaceOrder, onClearError,
 }: {
   categories: Array<{ _id: string; name: string; items: PublicMenuItem[] }>;
   loading: boolean;
@@ -350,8 +378,17 @@ function MenuStep({
   orderError: string | null;
   onSetQty: (id: string, delta: number) => void;
   onPlaceOrder: () => Promise<void>;
+  onClearError: () => void;
 }) {
   const [placing, setPlacing] = useState(false);
+  const errorRef = useRef<HTMLDivElement>(null);
+
+  // Scroll the error banner into view whenever a new error appears
+  useEffect(() => {
+    if (orderError && errorRef.current) {
+      errorRef.current.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+  }, [orderError]);
 
   async function handlePlace() {
     setPlacing(true);
@@ -398,11 +435,21 @@ function MenuStep({
       {/* Error banner — always visible if order failed */}
       {orderError && (
         <motion.div
+          ref={errorRef}
           initial={{ opacity: 0, y: -8 }}
           animate={{ opacity: 1, y: 0 }}
-          className="mb-4 rounded-2xl border border-red-500/30 bg-red-900/30 px-4 py-3 text-center text-sm font-semibold text-red-300"
+          className="mb-4 rounded-2xl border border-red-500/40 bg-red-950/60 px-4 py-3 text-sm font-semibold text-red-300"
         >
-          ⚠️ {orderError}
+          <div className="flex items-start justify-between gap-3">
+            <span>⚠️ {orderError}</span>
+            <button
+              onClick={onClearError}
+              aria-label="Dismiss error"
+              className="shrink-0 text-red-400 hover:text-red-200 transition-colors text-base leading-none"
+            >
+              ✕
+            </button>
+          </div>
         </motion.div>
       )}
 
