@@ -8,6 +8,15 @@ export async function listRooms(params: Record<string, string | number | undefin
   return { items: data.data, meta: data.meta };
 }
 
+export async function listAvailableRooms(params: {
+  propertyId: string;
+  checkIn: string;
+  checkOut: string;
+}) {
+  const { data } = await apiClient.get<ApiResponse<Room[]>>('/rooms/availability', { params });
+  return data.data;
+}
+
 export async function createRoom(input: Partial<Room> & { propertyId: string }) {
   const { data } = await apiClient.post<ApiResponse<Room>>('/rooms', input);
   return data.data;
