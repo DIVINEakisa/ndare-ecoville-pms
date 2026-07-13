@@ -49,19 +49,21 @@ export function RestaurantPage() {
   const propertiesQuery = useQuery({ queryKey: ['properties'], queryFn: getProperties });
   const menuItemsQuery  = useQuery({
     queryKey: ['menu-items', propertyId],
-    queryFn: () => listMenuItems({ propertyId, limit: 200 }),
+    queryFn: () => listMenuItems({ propertyId: propertyId || undefined, limit: 100 }),
   });
   const ordersQuery = useQuery({
     queryKey: ['restaurant-orders', propertyId],
-    queryFn: () => listOrders({ propertyId, limit: 50 }),
+    queryFn: () => listOrders({ propertyId: propertyId || undefined, limit: 50 }),
   });
   const guestsQuery = useQuery({
     queryKey: ['restaurant-guests', propertyId],
-    queryFn: () => listGuests({ propertyId, limit: 200 }),
+    queryFn: () => listGuests({ propertyId: propertyId || undefined, limit: 100 }),
+    enabled: Boolean(propertyId),
   });
   const roomsQuery = useQuery({
     queryKey: ['restaurant-rooms', propertyId],
-    queryFn: () => listRooms({ propertyId, limit: 200 }),
+    queryFn: () => listRooms({ propertyId: propertyId || undefined, status: 'Occupied', limit: 100 }),
+    enabled: Boolean(propertyId),
   });
 
   return (
@@ -167,17 +169,24 @@ function TakeOrdersTab({
       setQty(1);
       orderFormRef.current?.reset();
     },
-    onError: () => toast.error('Order requires a checked-in guest with an open folio'),
+    onError: (err: unknown) => {
+      type E = { response?: { data?: { message?: string } } };
+      const msg = (err as E)?.response?.data?.message
+        ?? 'Could not place order. Guest must be checked in with an open folio.';
+      toast.error(msg);
+    },
   });
 
   function handleOrderSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     if (!selectedItem) { toast.error('Select a menu item first'); return; }
     const fd = new FormData(e.currentTarget);
+    const roomIdRaw = String(fd.get('roomId') ?? '').trim();
     orderMutation.mutate({
       propertyId: String(fd.get('propertyId')),
       guestId:    String(fd.get('guestId')),
-      roomId:     String(fd.get('roomId')) || undefined,
+      // only send roomId if it's a real non-empty value
+      roomId:     roomIdRaw || undefined,
       items: [{ menuItemId: selectedItem._id, quantity: qty }],
     });
   }
@@ -276,9 +285,15 @@ function TakeOrdersTab({
               </select>
             </OField>
 
-            <OField label="Guest" required>
-              <select name="guestId" required className={selectCls} disabled={!propertyId}>
-                <option value="">{propertyId ? 'Select guest…' : 'Select property first'}</option>
+            <OField label="Guest (checked-in)" required>
+              <select name="guestId" required className={selectCls} disabled={!propertyId || guestsQuery.isLoading}>
+                <option value="">
+                  {!propertyId
+                    ? 'Select property first'
+                    : guestsQuery.isLoading
+                    ? 'Loading guests…'
+                    : (guests.length === 0 ? 'No checked-in guests found' : 'Select guest…')}
+                </option>
                 {guests.map((g) => <option key={g._id} value={g._id}>{g.fullName}</option>)}
               </select>
             </OField>
