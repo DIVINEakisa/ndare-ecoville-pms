@@ -29,6 +29,34 @@ type GuestInfo = {
 
 type CartMap = Record<string, number>;
 
+// ─── localStorage helpers ─────────────────────────────────────────────────────
+const STORAGE_KEY = 'pms.lastOrder';
+
+type StoredOrder = PlacedOrder & { savedAt: number };
+
+function saveOrderToStorage(order: PlacedOrder) {
+  try {
+    const stored: StoredOrder = { ...order, savedAt: Date.now() };
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(stored));
+  } catch { /* storage unavailable */ }
+}
+
+function loadOrderFromStorage(): PlacedOrder | null {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (!raw) return null;
+    const stored: StoredOrder = JSON.parse(raw);
+    // Discard orders older than 6 hours or already fully done
+    const age = Date.now() - stored.savedAt;
+    if (age > 6 * 60 * 60 * 1000) { clearOrderFromStorage(); return null; }
+    return stored;
+  } catch { return null; }
+}
+
+function clearOrderFromStorage() {
+  try { localStorage.removeItem(STORAGE_KEY); } catch { /* ignore */ }
+}
+
 // ─── Page root ────────────────────────────────────────────────────────────────
 export function PublicOrderPage() {
   const { propertyId = '' } = useParams<{ propertyId: string }>();
@@ -41,11 +69,21 @@ export function PublicOrderPage() {
   // If the URL is missing critical params, show the full manual form as fallback
   const hasUrlLocation = Boolean(urlNumber.trim());
 
-  const [step, setStep]               = useState<Step>('checkin');
+  // Restore from localStorage if the guest refreshes mid-order
+  const restoredOrder = loadOrderFromStorage();
+  const isRestorable  = Boolean(
+    restoredOrder &&
+    restoredOrder.status !== 'Delivered' &&
+    restoredOrder.status !== 'Cancelled'
+  );
+
+  const [step, setStep]               = useState<Step>(isRestorable ? 'confirmed' : 'checkin');
   const [guestInfo, setGuestInfo]     = useState<GuestInfo | null>(null);
   const [cart, setCart]               = useState<CartMap>({});
-  const [placedOrder, setPlacedOrder] = useState<PlacedOrder | null>(null);
+  const [placedOrder, setPlacedOrder] = useState<PlacedOrder | null>(isRestorable ? restoredOrder : null);
   const [orderError, setOrderError]   = useState<string | null>(null);
+  // Used on the check-in screen to show "you have an active order" banner
+  const [savedOrder]                  = useState<PlacedOrder | null>(loadOrderFromStorage());
 
   const menuQuery = useQuery({
     queryKey: ['public-menu', propertyId],
@@ -95,6 +133,7 @@ export function PublicOrderPage() {
         ...guestInfo,
         items,
       });
+      saveOrderToStorage(order);
       setPlacedOrder(order);
       setCart({});
       setStep('confirmed');
@@ -194,7 +233,12 @@ export function PublicOrderPage() {
                 propertyName={propertyName}
                 urlType={hasUrlLocation ? urlType : undefined}
                 urlNumber={hasUrlLocation ? urlNumber : undefined}
+                savedOrder={savedOrder}
                 onConfirm={(info) => { setGuestInfo(info); setStep('menu'); }}
+                onViewSavedOrder={() => {
+                  setPlacedOrder(savedOrder);
+                  setStep('confirmed');
+                }}
               />
             </motion.div>
           )}
@@ -239,21 +283,23 @@ function CheckInStep({
   propertyName,
   urlType,
   urlNumber,
+  savedOrder,
   onConfirm,
+  onViewSavedOrder,
 }: {
   loading: boolean;
   propertyName?: string;
-  /** Passed when the URL already contains ?type=...&number=... — skips location fields */
   urlType?:   'room' | 'table';
   urlNumber?: string;
+  savedOrder: PlacedOrder | null;
   onConfirm: (info: GuestInfo) => void;
+  onViewSavedOrder: () => void;
 }) {
   const [guestName,      setGuestName]      = useState('');
   const [locationType,   setLocationType]   = useState<'room' | 'table'>(urlType ?? 'room');
   const [locationNumber, setLocationNumber] = useState(urlNumber ?? '');
   const nameRef = useRef<HTMLInputElement>(null);
 
-  // URL provides the location — lock it in and just ask for the name
   const isAutoMode = Boolean(urlType && urlNumber);
 
   useEffect(() => { nameRef.current?.focus(); }, []);
@@ -270,6 +316,38 @@ function CheckInStep({
 
   return (
     <div>
+      {/* ── Active order banner — shown when guest returns after placing an order ── */}
+      {savedOrder && savedOrder.status !== 'Delivered' && savedOrder.status !== 'Cancelled' && (
+        <motion.div
+          initial={{ opacity: 0, y: -8 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="mb-6 overflow-hidden rounded-2xl border border-lime-700/50 bg-lime-900/20"
+        >
+          <div className="flex items-start gap-3 px-4 py-4">
+            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-lime-700/30 text-xl">
+              👨‍🍳
+            </div>
+            <div className="min-w-0 flex-1">
+              <p className="text-sm font-bold text-lime-300">You have an active order</p>
+              <p className="mt-0.5 text-xs text-slate-400">
+                Order <span className="font-semibold text-lime-400">{savedOrder.orderNumber}</span>
+                {' '}· {savedOrder.locationType} {savedOrder.locationNumber}
+              </p>
+              <p className="mt-0.5 text-xs capitalize text-slate-500">
+                Status: <span className="font-semibold text-white">{savedOrder.status}</span>
+              </p>
+            </div>
+          </div>
+          <button
+            type="button"
+            onClick={onViewSavedOrder}
+            className="flex w-full items-center justify-center gap-2 border-t border-lime-700/30 bg-lime-900/30 py-3 text-sm font-bold text-lime-300 transition hover:bg-lime-900/50"
+          >
+            <Clock className="h-4 w-4" /> Check order progress →
+          </button>
+        </motion.div>
+      )}
+
       <div className="mb-8 text-center">
         <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-lime-700/20 ring-1 ring-lime-700/40">
           <UtensilsCrossed className="h-8 w-8 text-lime-400" />
@@ -585,7 +663,10 @@ function ConfirmedStep({ order }: { order: PlacedOrder }) {
       try {
         const { status: latest } = await pollOrderStatus(order.orderId);
         setStatus(latest);
-        if (latest === 'Delivered' || latest === 'Cancelled') clearInterval(interval);
+        if (latest === 'Delivered' || latest === 'Cancelled') {
+          clearOrderFromStorage();
+          clearInterval(interval);
+        }
       } catch { /* silent */ }
     }, 15_000);
     return () => clearInterval(interval);
@@ -717,7 +798,7 @@ function ConfirmedStep({ order }: { order: PlacedOrder }) {
           className="flex w-full items-center justify-center gap-2 rounded-2xl border border-lime-700/50 bg-lime-900/20 py-3.5 text-sm font-bold text-lime-300 transition hover:bg-lime-900/40">
           <Clock className="h-4 w-4" /> Check order status
         </button>
-        <button onClick={() => window.location.reload()}
+        <button onClick={() => { clearOrderFromStorage(); window.location.reload(); }}
           className="flex w-full items-center justify-center gap-2 rounded-2xl border border-white/10 bg-white/5 py-3.5 text-sm font-semibold text-slate-300 transition hover:bg-white/10">
           <Plus className="h-4 w-4" /> Place another order
         </button>
