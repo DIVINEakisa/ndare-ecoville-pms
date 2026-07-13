@@ -43,6 +43,9 @@ const RequisitionsPage = lazy(() =>
 const NotificationsPage = lazy(() =>
   import('../features/supply/NotificationsPage').then((module) => ({ default: module.NotificationsPage }))
 );
+const HistoryPage = lazy(() =>
+  import('../features/admin/HistoryPage').then((module) => ({ default: module.HistoryPage }))
+);
 const ReportsPage = lazy(() =>
   import('../features/admin/ReportsPage').then((module) => ({ default: module.ReportsPage }))
 );
@@ -106,6 +109,7 @@ export function AppRouter() {
               <Route path="/requisitions" element={<RequisitionsPage />} />
               <Route path="/notifications" element={<NotificationsPage />} />
               <Route path="/reports" element={<ReportsPage />} />
+              <Route path="/history" element={<HistoryPage />} />
               <Route path="/settings" element={<SettingsPage />} />
               <Route path="/qr-management" element={<QRManagementPage />} />
               <Route element={<OwnerRoute />}>

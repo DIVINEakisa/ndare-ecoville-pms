@@ -7,6 +7,7 @@ import {
   ClipboardList,
   CreditCard,
   FileBarChart,
+  History,
   Home,
   Menu,
   Package,
@@ -148,6 +149,12 @@ const ALL_NAV_GROUPS: NavGroup[] = [
         href: '/reports',
         icon: FileBarChart,
         roles: ['Owner', 'Admin', 'Property Manager']
+      },
+      {
+        label: 'History',
+        href: '/history',
+        icon: History,
+        roles: ['Owner', 'Admin', 'Property Manager', 'Receptionist', 'Cashier']
       },
       {
         label: 'Settings',
