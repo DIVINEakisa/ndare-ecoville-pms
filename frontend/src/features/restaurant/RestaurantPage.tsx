@@ -119,6 +119,7 @@ export function RestaurantPage() {
               orders={ordersQuery.data?.items ?? []}
               ordersLoading={ordersQuery.isLoading}
               guests={guestsQuery.data?.items ?? []}
+              guestsLoading={guestsQuery.isLoading}
               rooms={roomsQuery.data?.items ?? []}
             />
           </motion.div>
@@ -143,7 +144,7 @@ function TakeOrdersTab({
   propertyId, setPropertyId, properties,
   menuItems, menuLoading,
   orders, ordersLoading,
-  guests, rooms,
+  guests, guestsLoading, rooms,
 }: {
   propertyId: string;
   setPropertyId: (id: string) => void;
@@ -153,6 +154,7 @@ function TakeOrdersTab({
   orders: RestaurantOrder[];
   ordersLoading: boolean;
   guests: Array<{ _id: string; fullName: string }>;
+  guestsLoading: boolean;
   rooms: Array<{ _id: string; roomNumber: string }>;
 }) {
   const queryClient = useQueryClient();
@@ -286,11 +288,11 @@ function TakeOrdersTab({
             </OField>
 
             <OField label="Guest (checked-in)" required>
-              <select name="guestId" required className={selectCls} disabled={!propertyId || guestsQuery.isLoading}>
+              <select name="guestId" required className={selectCls} disabled={!propertyId || guestsLoading}>
                 <option value="">
                   {!propertyId
                     ? 'Select property first'
-                    : guestsQuery.isLoading
+                    : guestsLoading
                     ? 'Loading guests…'
                     : (guests.length === 0 ? 'No checked-in guests found' : 'Select guest…')}
                 </option>
