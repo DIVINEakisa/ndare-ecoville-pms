@@ -577,9 +577,9 @@ function MenuItemCard({
 
 // ─── Step 3: Confirmed ────────────────────────────────────────────────────────
 function ConfirmedStep({ order }: { order: PlacedOrder }) {
-  const [status, setStatus] = useState(order.status);
+  const [status, setStatus]             = useState(order.status);
+  const [checkModalOpen, setCheckModal] = useState(false);
 
-  // Poll every 15 seconds so the status updates live without a refresh
   useEffect(() => {
     const interval = setInterval(async () => {
       try {
@@ -591,181 +591,110 @@ function ConfirmedStep({ order }: { order: PlacedOrder }) {
     return () => clearInterval(interval);
   }, [order.orderId]);
 
-  // Progress steps — each stage the guest can see
-  const stages: Array<{ key: string; label: string; sublabel: string }> = [
-    { key: 'Received',  label: 'Order Received',    sublabel: 'Your order is confirmed' },
-    { key: 'Preparing', label: 'Being Prepared',     sublabel: 'Our chef is cooking now' },
-    { key: 'Ready',     label: 'Ready!',             sublabel: 'Your order is on the way' },
-    { key: 'Delivered', label: 'Delivered',          sublabel: 'Enjoy your meal!' },
+  const stages: Array<{ key: string; label: string; sublabel: string; icon: string }> = [
+    { key: 'Received',  label: 'Order Received',  sublabel: 'Your order is confirmed and in the queue', icon: '🧾' },
+    { key: 'Preparing', label: 'Being Prepared',  sublabel: 'Our chef is cooking your meal right now',  icon: '👨‍🍳' },
+    { key: 'Ready',     label: 'Ready!',           sublabel: 'Your meal is ready and heading your way',  icon: '✅' },
+    { key: 'Delivered', label: 'Delivered',        sublabel: 'Your order has arrived — enjoy!',          icon: '🎉' },
   ];
 
-  const stageIndex = stages.findIndex((s) => s.key === status);
-  const currentStage = stages[stageIndex] ?? stages[0];
-
+  const stageIndex  = stages.findIndex((s) => s.key === status);
   const isCancelled = status === 'Cancelled';
   const isDelivered = status === 'Delivered';
 
   return (
-    <div className="text-center">
-
-      {/* ── Big animated confirmation icon ── */}
-      <motion.div
-        initial={{ scale: 0, rotate: -15 }}
-        animate={{ scale: 1, rotate: 0 }}
-        transition={{ type: 'spring', stiffness: 240, damping: 16 }}
-        className={`mx-auto mb-5 flex h-28 w-28 items-center justify-center rounded-3xl ring-4 ${
-          isCancelled
-            ? 'bg-red-900/30 ring-red-700/50'
-            : isDelivered
-            ? 'bg-emerald-900/30 ring-emerald-600/50'
-            : 'bg-lime-900/30 ring-lime-600/50'
-        }`}
-      >
-        {isCancelled ? (
-          <UtensilsCrossed className="h-14 w-14 text-red-400" />
-        ) : isDelivered ? (
-          <CheckCircle2 className="h-14 w-14 text-emerald-400" />
-        ) : (
-          <ChefHat className="h-14 w-14 text-lime-400" />
-        )}
-      </motion.div>
-
-      {/* ── Main message ── */}
-      <motion.div
-        initial={{ opacity: 0, y: 10 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.15 }}
-      >
-        {isCancelled ? (
-          <>
-            <h1 className="text-2xl font-black text-white">Order Cancelled</h1>
-            <p className="mt-2 text-slate-400">
-              Your order was cancelled. Please speak to a staff member for assistance.
-            </p>
-          </>
-        ) : isDelivered ? (
-          <>
-            <h1 className="text-2xl font-black text-white">Enjoy your meal! 🎉</h1>
-            <p className="mt-2 text-slate-400">
-              Your order has been delivered. Thank you for dining with us!
-            </p>
-          </>
-        ) : (
-          <>
-            <h1 className="text-2xl font-black text-white">
-              {currentStage.key === 'Received'
-                ? 'Order accepted!'
-                : 'Your order is being prepared!'}
-            </h1>
-            <p className="mt-2 text-slate-400">
-              {currentStage.key === 'Received'
-                ? 'We have received your order and our kitchen team is about to start.'
-                : 'Our chef is preparing your meal. It will be delivered to you shortly.'}
-            </p>
-          </>
-        )}
-      </motion.div>
-
-      {/* ── Live status progress bar ── */}
-      {!isCancelled && (
+    <div>
+      {/* Header icon */}
+      <div className="mb-6 text-center">
         <motion.div
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.25 }}
-          className="mt-7 rounded-2xl border border-white/10 bg-white/5 p-5"
+          initial={{ scale: 0, rotate: -15 }}
+          animate={{ scale: 1, rotate: 0 }}
+          transition={{ type: 'spring', stiffness: 240, damping: 16 }}
+          className={`mx-auto mb-4 flex h-24 w-24 items-center justify-center rounded-3xl ring-4 ${
+            isCancelled ? 'bg-red-900/30 ring-red-700/50'
+            : isDelivered ? 'bg-emerald-900/30 ring-emerald-600/50'
+            : 'bg-lime-900/30 ring-lime-600/50'}`}
         >
-          <p className="mb-4 text-xs font-semibold uppercase tracking-widest text-slate-500">
+          {isCancelled ? <UtensilsCrossed className="h-12 w-12 text-red-400" />
+            : isDelivered ? <CheckCircle2 className="h-12 w-12 text-emerald-400" />
+            : <ChefHat className="h-12 w-12 text-lime-400" />}
+        </motion.div>
+        <motion.h1 initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }}
+          className="text-2xl font-black text-white">
+          {isCancelled ? 'Order Cancelled' : isDelivered ? 'Enjoy your meal! 🎉'
+            : stageIndex === 0 ? 'Order accepted!' : 'Being prepared!'}
+        </motion.h1>
+        <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.22 }}
+          className="mt-1.5 text-sm text-slate-400">
+          {isCancelled ? 'Please speak to a staff member for assistance.'
+            : isDelivered ? 'Thank you for dining with us!'
+            : stageIndex === 0 ? 'Our kitchen team is about to start on your order.'
+            : 'Our chef is preparing your meal — it will arrive shortly.'}
+        </motion.p>
+      </div>
+
+      {/* Vertical progress tracker */}
+      {!isCancelled && (
+        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.28 }}
+          className="mb-4 rounded-2xl border border-white/10 bg-white/5 p-5">
+          <p className="mb-5 text-center text-[11px] font-bold uppercase tracking-widest text-slate-500">
             Live Order Status
           </p>
-
-          {/* Progress steps */}
-          <div className="flex items-center justify-between gap-1">
+          <div>
             {stages.map((stage, i) => {
               const isDone    = i < stageIndex;
               const isCurrent = i === stageIndex;
+              const isLast    = i === stages.length - 1;
               return (
-                <div key={stage.key} className="flex flex-1 flex-col items-center gap-1.5">
-                  {/* Step circle */}
-                  <div className={`relative flex h-9 w-9 items-center justify-center rounded-full border-2 transition-all duration-500 ${
-                    isDone
-                      ? 'border-lime-500 bg-lime-700'
-                      : isCurrent
-                      ? 'border-lime-400 bg-lime-900/50'
-                      : 'border-white/10 bg-white/5'
-                  }`}>
-                    {isDone ? (
-                      <CheckCircle2 className="h-4 w-4 text-white" />
-                    ) : isCurrent ? (
-                      <motion.div
-                        animate={{ scale: [1, 1.2, 1] }}
-                        transition={{ repeat: Infinity, duration: 1.5 }}
-                        className="h-2.5 w-2.5 rounded-full bg-lime-400"
-                      />
-                    ) : (
-                      <div className="h-2 w-2 rounded-full bg-white/20" />
+                <div key={stage.key} className="flex gap-4">
+                  <div className="flex flex-col items-center">
+                    <div className={`relative z-10 flex h-10 w-10 shrink-0 items-center justify-center rounded-full border-2 text-base transition-all duration-500 ${
+                      isDone    ? 'border-lime-500 bg-lime-700 text-white'
+                      : isCurrent ? 'border-lime-400 bg-lime-900/60 text-lime-300'
+                      : 'border-white/10 bg-white/5 text-slate-600'}`}>
+                      {isDone ? <CheckCircle2 className="h-5 w-5 text-white" />
+                        : isCurrent ? (
+                          <motion.span animate={{ scale: [1, 1.15, 1] }} transition={{ repeat: Infinity, duration: 1.6 }}>
+                            {stage.icon}
+                          </motion.span>
+                        ) : <span className="text-sm">{stage.icon}</span>}
+                    </div>
+                    {!isLast && <div className={`h-10 w-0.5 transition-all duration-700 ${isDone ? 'bg-lime-600' : 'bg-white/10'}`} />}
+                  </div>
+                  <div className={`pt-1.5 ${isLast ? 'pb-0' : 'pb-6'}`}>
+                    <p className={`text-sm font-bold leading-tight ${isDone ? 'text-lime-400' : isCurrent ? 'text-white' : 'text-slate-600'}`}>
+                      {stage.label}
+                    </p>
+                    {isCurrent && (
+                      <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="mt-0.5 text-xs text-slate-400">
+                        {stage.sublabel}
+                      </motion.p>
                     )}
                   </div>
-
-                  {/* Connector line (not after last) */}
-                  {i < stages.length - 1 && (
-                    <div className="absolute" style={{ display: 'none' }} />
-                  )}
-
-                  {/* Label */}
-                  <p className={`text-[10px] font-semibold leading-tight text-center ${
-                    isDone ? 'text-lime-400' : isCurrent ? 'text-white' : 'text-slate-600'
-                  }`}>
-                    {stage.label}
-                  </p>
                 </div>
               );
             })}
           </div>
-
-          {/* Horizontal connector between steps */}
-          <div className="relative -mt-[52px] mb-3 flex items-center px-5">
-            {stages.slice(0, -1).map((_, i) => (
-              <div key={i} className={`h-0.5 flex-1 transition-all duration-700 ${
-                i < stageIndex ? 'bg-lime-600' : 'bg-white/10'
-              }`} />
-            ))}
-          </div>
-
-          {/* Current stage sublabel */}
-          <div className={`mt-4 rounded-xl px-4 py-2.5 text-sm font-semibold ${
-            isDelivered
-              ? 'bg-emerald-900/30 text-emerald-300'
-              : 'bg-lime-900/30 text-lime-300'
-          }`}>
-            {currentStage.sublabel}
-          </div>
-
           {!isDelivered && (
-            <p className="mt-2 text-xs text-slate-600">
-              Updates automatically · no need to refresh
-            </p>
+            <p className="mt-3 text-center text-xs text-slate-600">Updates automatically · no need to refresh</p>
           )}
         </motion.div>
       )}
 
-      {/* ── Order number ── */}
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ delay: 0.3 }}
-        className="mt-4 rounded-2xl border border-white/10 bg-white/5 px-6 py-4"
-      >
+      {/* Order reference */}
+      <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.32 }}
+        className="mb-4 rounded-2xl border border-white/10 bg-white/5 px-5 py-4">
         <p className="text-xs font-semibold uppercase tracking-widest text-slate-500">Order Reference</p>
         <p className="mt-1 text-xl font-black tracking-widest text-lime-400">{order.orderNumber}</p>
+        <div className="mt-2 flex items-center gap-1.5 text-xs text-slate-500">
+          <MapPin className="h-3.5 w-3.5 text-lime-600" />
+          <span className="capitalize">Delivering to {order.locationType} {order.locationNumber}</span>
+        </div>
       </motion.div>
 
-      {/* ── Order summary ── */}
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ delay: 0.35 }}
-        className="mt-4 rounded-2xl border border-white/10 bg-white/5 px-6 py-4 text-left"
-      >
+      {/* Order summary */}
+      <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.36 }}
+        className="mb-4 rounded-2xl border border-white/10 bg-white/5 px-5 py-4 text-left">
         <p className="mb-3 text-xs font-semibold uppercase tracking-widest text-slate-500">Your Order</p>
         <div className="space-y-2">
           {order.items.map((item, i) => (
@@ -774,38 +703,149 @@ function ConfirmedStep({ order }: { order: PlacedOrder }) {
               <span className="font-semibold text-white">{money.format(item.total)}</span>
             </div>
           ))}
-          <div className="mt-3 flex items-center justify-between border-t border-white/10 pt-3 text-base font-bold">
+          <div className="flex items-center justify-between border-t border-white/10 pt-3 text-base font-bold">
             <span className="text-white">Total</span>
             <span className="text-lime-400">{money.format(order.totalAmount)}</span>
           </div>
         </div>
       </motion.div>
 
-      {/* ── Delivery location ── */}
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ delay: 0.4 }}
-        className="mt-4 flex items-center justify-center gap-2 text-sm text-slate-400"
-      >
-        <MapPin className="h-4 w-4 text-lime-500" />
-        Delivering to
-        <span className="font-semibold capitalize text-white">
-          {order.locationType} {order.locationNumber}
-        </span>
+      {/* Actions */}
+      <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.4 }}
+        className="space-y-3">
+        <button onClick={() => setCheckModal(true)}
+          className="flex w-full items-center justify-center gap-2 rounded-2xl border border-lime-700/50 bg-lime-900/20 py-3.5 text-sm font-bold text-lime-300 transition hover:bg-lime-900/40">
+          <Clock className="h-4 w-4" /> Check order status
+        </button>
+        <button onClick={() => window.location.reload()}
+          className="flex w-full items-center justify-center gap-2 rounded-2xl border border-white/10 bg-white/5 py-3.5 text-sm font-semibold text-slate-300 transition hover:bg-white/10">
+          <Plus className="h-4 w-4" /> Place another order
+        </button>
       </motion.div>
 
-      {/* ── Place another order ── */}
-      <motion.button
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ delay: 0.45 }}
-        onClick={() => window.location.reload()}
-        className="mt-8 flex w-full items-center justify-center gap-2 rounded-2xl border border-white/10 bg-white/5 py-3.5 text-sm font-semibold text-slate-300 transition hover:bg-white/10"
-      >
-        <Plus className="h-4 w-4" /> Place another order
-      </motion.button>
+      {/* Status modal */}
+      <AnimatePresence>
+        {checkModalOpen && (
+          <OrderStatusModal
+            currentOrderId={order.orderId}
+            currentOrderNumber={order.orderNumber}
+            onClose={() => setCheckModal(false)}
+          />
+        )}
+      </AnimatePresence>
     </div>
+  );
+}
+
+// ─── Order status modal ───────────────────────────────────────────────────────
+function OrderStatusModal({
+  currentOrderId, currentOrderNumber, onClose,
+}: { currentOrderId: string; currentOrderNumber: string; onClose: () => void }) {
+  const [inputId, setInputId]   = useState(currentOrderId);
+  const [loading, setLoading]   = useState(false);
+  const [error, setError]       = useState<string | null>(null);
+  const [result, setResult]     = useState<{ status: string } | null>(null);
+  const [searched, setSearched] = useState('');
+
+  useEffect(() => { fetchStatus(currentOrderId); }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  async function fetchStatus(id: string) {
+    if (!id.trim()) return;
+    setLoading(true); setError(null);
+    try {
+      const data = await pollOrderStatus(id.trim());
+      setResult(data); setSearched(id.trim());
+    } catch { setError('Order not found. Check the reference number.'); setResult(null); }
+    finally { setLoading(false); }
+  }
+
+  const STAGES = ['Received', 'Preparing', 'Ready', 'Delivered'];
+  const idx = result ? STAGES.indexOf(result.status) : -1;
+  const statusColors: Record<string, string> = {
+    Received:  'border-amber-600/50 bg-amber-900/30 text-amber-300',
+    Preparing: 'border-blue-600/50 bg-blue-900/30 text-blue-300',
+    Ready:     'border-lime-600/50 bg-lime-900/30 text-lime-300',
+    Delivered: 'border-emerald-600/50 bg-emerald-900/30 text-emerald-300',
+    Cancelled: 'border-red-600/50 bg-red-900/30 text-red-300',
+  };
+
+  return (
+    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+      className="fixed inset-0 z-50 flex items-end justify-center bg-black/70 px-4 pb-4 sm:items-center"
+      onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}>
+      <motion.div initial={{ y: 60, opacity: 0 }} animate={{ y: 0, opacity: 1 }}
+        exit={{ y: 60, opacity: 0 }} transition={{ type: 'spring', stiffness: 320, damping: 30 }}
+        className="w-full max-w-sm rounded-3xl border border-white/10 bg-slate-900 p-6 shadow-2xl">
+
+        {/* Header */}
+        <div className="mb-5 flex items-center justify-between">
+          <div>
+            <h2 className="text-base font-black text-white">Order Status</h2>
+            <p className="text-xs text-slate-500">Check any order by its reference number</p>
+          </div>
+          <button onClick={onClose}
+            className="flex h-8 w-8 items-center justify-center rounded-xl border border-white/10 text-slate-400 transition hover:bg-white/10 text-lg">
+            ✕
+          </button>
+        </div>
+
+        {/* Search row */}
+        <div className="mb-3 flex gap-2">
+          <input type="text" value={inputId} onChange={(e) => setInputId(e.target.value)}
+            onKeyDown={(e) => e.key === 'Enter' && fetchStatus(inputId)}
+            placeholder="Paste order ID…"
+            className="flex-1 rounded-xl border border-white/10 bg-white/5 px-4 py-2.5 text-sm text-white placeholder:text-slate-500 outline-none focus:border-lime-600 focus:ring-2 focus:ring-lime-600/30" />
+          <button onClick={() => fetchStatus(inputId)} disabled={loading || !inputId.trim()}
+            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-lime-700 text-white transition hover:bg-lime-600 disabled:opacity-50">
+            {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <ArrowLeft className="h-4 w-4 rotate-180" />}
+          </button>
+        </div>
+
+        {/* Quick-fill */}
+        {inputId !== currentOrderId && (
+          <button onClick={() => { setInputId(currentOrderId); fetchStatus(currentOrderId); }}
+            className="mb-3 w-full rounded-xl border border-lime-800/40 bg-lime-900/20 px-3 py-2 text-xs font-semibold text-lime-400 transition hover:bg-lime-900/40">
+            Use current order ({currentOrderNumber})
+          </button>
+        )}
+
+        {error && <div className="mb-3 rounded-xl border border-red-700/40 bg-red-900/30 px-4 py-3 text-sm text-red-300">{error}</div>}
+
+        {result && !error && (
+          <motion.div key={searched} initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} className="space-y-3">
+            <div className={`flex items-center justify-between rounded-xl border px-4 py-3 ${statusColors[result.status] ?? 'border-white/10 bg-white/5 text-slate-300'}`}>
+              <span className="text-sm font-semibold">Current status</span>
+              <span className="text-sm font-black">{result.status}</span>
+            </div>
+            {result.status !== 'Cancelled' && (
+              <div className="rounded-xl border border-white/10 bg-white/5 px-4 py-3">
+                {STAGES.map((s, i) => {
+                  const done = i < idx; const cur = i === idx; const last = i === STAGES.length - 1;
+                  return (
+                    <div key={s} className="flex items-start gap-3">
+                      <div className="flex flex-col items-center">
+                        <div className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full border text-xs transition-all ${done ? 'border-lime-500 bg-lime-700 text-white' : cur ? 'border-lime-400 bg-lime-900/50 text-lime-300' : 'border-white/10 bg-white/5 text-slate-600'}`}>
+                          {done ? '✓' : i + 1}
+                        </div>
+                        {!last && <div className={`h-6 w-0.5 ${done ? 'bg-lime-600' : 'bg-white/10'}`} />}
+                      </div>
+                      <p className={`pt-0.5 text-sm font-semibold ${done ? 'text-lime-400' : cur ? 'text-white' : 'text-slate-600'}`}>
+                        {s}{cur && <span className="ml-2 text-xs font-normal text-slate-400">← now</span>}
+                      </p>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </motion.div>
+        )}
+
+        <button onClick={onClose}
+          className="mt-5 w-full rounded-2xl border border-white/10 py-3 text-sm font-semibold text-slate-400 transition hover:bg-white/5">
+          Close
+        </button>
+      </motion.div>
+    </motion.div>
   );
 }
 
