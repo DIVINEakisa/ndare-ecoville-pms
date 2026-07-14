@@ -143,6 +143,7 @@ export function RestaurantPage() {
               orders={ordersQuery.data?.items ?? []}
               ordersLoading={ordersQuery.isLoading}
               guests={guestsQuery.data?.items ?? []}
+              guestsLoading={guestsQuery.isLoading}
               rooms={roomsQuery.data?.items ?? []}
             />
           </motion.div>
@@ -183,6 +184,7 @@ function TakeOrdersTab({
   orders: RestaurantOrder[];
   ordersLoading: boolean;
   guests: Array<{ _id: string; fullName: string }>;
+  guestsLoading: boolean;
   rooms: Array<{ _id: string; roomNumber: string }>;
 }) {
   const queryClient = useQueryClient();
@@ -362,14 +364,16 @@ function TakeOrdersTab({
                 name="guestId"
                 required
                 className={selectCls}
-                disabled={!propertyId || guests.length === 0}
+                disabled={!propertyId || guestsQuery.isLoading}
               >
                 <option value="">
                   {!propertyId
                     ? "Select property first"
-                    : guests.length === 0
-                      ? "No checked-in guests found"
-                      : "Select guest…"}
+                    : guestsQuery.isLoading
+                      ? "Loading guests…"
+                      : guests.length === 0
+                        ? "No checked-in guests found"
+                        : "Select guest…"}
                 </option>
                 {guests.map((g) => (
                   <option key={g._id} value={g._id}>
