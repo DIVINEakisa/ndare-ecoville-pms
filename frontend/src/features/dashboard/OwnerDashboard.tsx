@@ -3,7 +3,8 @@
  * Shows full financial metrics, portfolio view, revenue charts, and all KPIs.
  */
 import { useQuery } from '@tanstack/react-query';
-import { motion } from 'framer-motion';import {
+import { motion } from 'framer-motion';
+import {
   AlertTriangle,
   ArrowRight,
   Banknote,
@@ -15,7 +16,6 @@ import { motion } from 'framer-motion';import {
   Percent,
   Users
 } from 'lucide-react';
-import { useState } from 'react';
 import {
   Area,
   AreaChart,
@@ -34,8 +34,7 @@ import { Skeleton } from '../../components/ui/Skeleton';
 import type { UserRole } from '../../types/api';
 import {
   getDashboardSummary,
-  getPortfolioSummary,
-  getProperties
+  getPortfolioSummary
 } from './dashboardApi';
 import { useProperty } from '../../contexts/PropertyContext';
 
@@ -48,8 +47,6 @@ const money = new Intl.NumberFormat('en-RW', {
 export function OwnerDashboard({ role }: { role: UserRole }) {
   const { activePropertyId: propertyId } = useProperty();
   const isOwnerOrAdmin = role === 'Owner' || role === 'Admin';
-
-  const propertiesQuery = useQuery({ queryKey: ['properties'], queryFn: getProperties });
 
   const summaryQuery = useQuery({
     queryKey: ['dashboard-summary', propertyId],

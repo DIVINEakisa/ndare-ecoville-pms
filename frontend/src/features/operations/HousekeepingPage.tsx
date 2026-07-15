@@ -10,7 +10,6 @@ import { EmptyState } from '../../components/ui/EmptyState';
 import { PageHeader } from '../../components/ui/PageHeader';
 import { Skeleton } from '../../components/ui/Skeleton';
 import { useProperty } from '../../contexts/PropertyContext';
-import { getProperties } from '../dashboard/dashboardApi';
 import { apiClient } from '../../services/apiClient';
 import type { ApiResponse, Room } from '../../types/api';
 
@@ -64,8 +63,6 @@ export function HousekeepingPage() {
   const [filterStatus, setFilterStatus] = useState<Room['status'] | 'all'>('all');
   const [confirmTarget, setConfirmTarget] = useState<{ room: Room; status: Room['status']; label: string } | null>(null);
   const queryClient = useQueryClient();
-
-  const propertiesQuery = useQuery({ queryKey: ['properties'], queryFn: getProperties });
 
   const roomsQuery = useQuery({
     queryKey: ['housekeeping-rooms', propertyId],

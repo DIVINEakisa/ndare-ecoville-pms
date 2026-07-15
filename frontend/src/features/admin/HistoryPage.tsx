@@ -10,7 +10,6 @@ import { EmptyState } from '../../components/ui/EmptyState';
 import { PageHeader } from '../../components/ui/PageHeader';
 import { Skeleton } from '../../components/ui/Skeleton';
 import { useProperty } from '../../contexts/PropertyContext';
-import { getProperties } from '../dashboard/dashboardApi';
 import { listReservations } from '../operations/operationsApi';
 import { listOrders } from '../restaurant/restaurantApi';
 import { apiClient } from '../../services/apiClient';
@@ -188,8 +187,6 @@ export function HistoryPage() {
   const [to, setTo]                 = useState(TODAY);
   const [search, setSearch]         = useState('');
   const [category, setCategory]     = useState<'all' | HistoryEvent['category']>('all');
-
-  const propertiesQuery = useQuery({ queryKey: ['properties'], queryFn: getProperties });
 
   const reservationsQuery = useQuery({
     queryKey: ['history-reservations', propertyId, from, to],

@@ -7,13 +7,11 @@ import { EmptyState } from '../../components/ui/EmptyState';
 import { PageHeader } from '../../components/ui/PageHeader';
 import { Skeleton } from '../../components/ui/Skeleton';
 import { useProperty } from '../../contexts/PropertyContext';
-import { getProperties } from '../dashboard/dashboardApi';
 import { listEmailTemplates, listSettings, saveEmailTemplate, saveSetting } from './adminApi';
 
 export function SettingsPage() {
   const queryClient = useQueryClient();
   const { activePropertyId: propertyId } = useProperty();
-  const properties = useQuery({ queryKey: ['properties'], queryFn: getProperties });
   const settings = useQuery({ queryKey: ['settings', propertyId], queryFn: () => listSettings({ propertyId }) });
   const templates = useQuery({ queryKey: ['email-templates'], queryFn: listEmailTemplates });
   const settingMutation = useMutation({
