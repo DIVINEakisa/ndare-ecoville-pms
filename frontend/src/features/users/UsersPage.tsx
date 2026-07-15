@@ -41,12 +41,18 @@ export function UsersPage() {
 
   const createMutation = useMutation({
     mutationFn: createStaffUser,
-    onSuccess: () => {
-      toast.success('Staff account created. An invitation email has been sent.');
+    onSuccess: (result) => {
+      const name = result.user?.fullName ?? 'Staff member';
+      const verb = result.reactivated ? 'reactivated' : 'created';
+      toast.success(`${name} has been ${verb}. They can now log in with the credentials you set.`);
       setCreateModalOpen(false);
       queryClient.invalidateQueries({ queryKey: ['staff-users'] });
     },
-    onError: () => toast.error('Could not create staff account')
+    onError: (err: unknown) => {
+      type E = { response?: { data?: { message?: string } } };
+      const msg = (err as E)?.response?.data?.message ?? 'Could not create staff account';
+      toast.error(msg);
+    }
   });
 
   const toggleMutation = useMutation({
@@ -529,9 +535,10 @@ function CreateStaffModal({
           event.preventDefault();
           const form = new FormData(event.currentTarget);
           onSubmit({
-            fullName: String(form.get('fullName')),
-            email:    String(form.get('email')),
-            role:     String(form.get('role')) as UserRole,
+            fullName:   String(form.get('fullName')),
+            email:      String(form.get('email')),
+            password:   String(form.get('password')),
+            role:       String(form.get('role')) as UserRole,
             propertyId: String(form.get('propertyId'))
           });
         }}
@@ -540,7 +547,7 @@ function CreateStaffModal({
           <div>
             <h2 className="text-xl font-semibold text-slate-950 dark:text-white">Add New Staff</h2>
             <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
-              Create an account with a temporary password.
+              Set credentials the staff member will use to log in.
             </p>
           </div>
           <button
@@ -555,22 +562,38 @@ function CreateStaffModal({
         <div className="grid gap-4">
           <label className="grid gap-2 text-sm font-semibold text-slate-700 dark:text-slate-200">
             Full Name
-            <input name="fullName" required className="h-12 rounded-2xl border border-slate-200 px-4 font-normal outline-none ring-lime-700 transition-colors duration-200 focus:ring-2 dark:border-slate-800 dark:bg-slate-950" />
+            <input name="fullName" required
+              className="h-12 rounded-2xl border border-slate-200 px-4 font-normal outline-none ring-lime-700 transition-colors duration-200 focus:ring-2 dark:border-slate-800 dark:bg-slate-950" />
           </label>
+
           <label className="grid gap-2 text-sm font-semibold text-slate-700 dark:text-slate-200">
             Email Address
-            <input name="email" type="email" required className="h-12 rounded-2xl border border-slate-200 px-4 font-normal outline-none ring-lime-700 transition-colors duration-200 focus:ring-2 dark:border-slate-800 dark:bg-slate-950" />
+            <input name="email" type="email" required
+              className="h-12 rounded-2xl border border-slate-200 px-4 font-normal outline-none ring-lime-700 transition-colors duration-200 focus:ring-2 dark:border-slate-800 dark:bg-slate-950" />
           </label>
+
+          <label className="grid gap-2 text-sm font-semibold text-slate-700 dark:text-slate-200">
+            Password
+            <input name="password" type="password" required minLength={8}
+              placeholder="Minimum 8 characters"
+              className="h-12 rounded-2xl border border-slate-200 px-4 font-normal outline-none ring-lime-700 transition-colors duration-200 focus:ring-2 dark:border-slate-800 dark:bg-slate-950" />
+            <span className="text-xs font-normal text-slate-400">
+              Share this password securely with the staff member after creating the account.
+            </span>
+          </label>
+
           <div className="grid gap-4 sm:grid-cols-2">
             <label className="grid gap-2 text-sm font-semibold text-slate-700 dark:text-slate-200">
               Role
-              <select name="role" required className="h-12 rounded-2xl border border-slate-200 bg-white px-4 font-normal outline-none ring-lime-700 transition-colors duration-200 focus:ring-2 dark:border-slate-800 dark:bg-slate-950">
+              <select name="role" required
+                className="h-12 rounded-2xl border border-slate-200 bg-white px-4 font-normal outline-none ring-lime-700 transition-colors duration-200 focus:ring-2 dark:border-slate-800 dark:bg-slate-950">
                 {roles.map((role) => <option key={role}>{role}</option>)}
               </select>
             </label>
             <label className="grid gap-2 text-sm font-semibold text-slate-700 dark:text-slate-200">
               Property Scope
-              <select name="propertyId" required className="h-12 rounded-2xl border border-slate-200 bg-white px-4 font-normal outline-none ring-lime-700 transition-colors duration-200 focus:ring-2 dark:border-slate-800 dark:bg-slate-950">
+              <select name="propertyId" required
+                className="h-12 rounded-2xl border border-slate-200 bg-white px-4 font-normal outline-none ring-lime-700 transition-colors duration-200 focus:ring-2 dark:border-slate-800 dark:bg-slate-950">
                 <option value="">Select property</option>
                 {properties.map((p) => <option key={p._id} value={p._id}>{p.name}</option>)}
               </select>
@@ -579,10 +602,13 @@ function CreateStaffModal({
         </div>
 
         <div className="mt-6 flex justify-end gap-3">
-          <button type="button" className="rounded-2xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 transition-colors duration-200 hover:bg-slate-50 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-200" onClick={onClose}>
+          <button type="button"
+            className="rounded-2xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 transition-colors duration-200 hover:bg-slate-50 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-200"
+            onClick={onClose}>
             Cancel
           </button>
-          <button type="submit" disabled={isSubmitting} className="inline-flex items-center gap-2 rounded-2xl bg-lime-700 px-4 py-2.5 text-sm font-semibold text-white shadow-lg shadow-lime-700/20 transition-colors duration-200 hover:bg-lime-800 disabled:opacity-60">
+          <button type="submit" disabled={isSubmitting}
+            className="inline-flex items-center gap-2 rounded-2xl bg-lime-700 px-4 py-2.5 text-sm font-semibold text-white shadow-lg shadow-lime-700/20 transition-colors duration-200 hover:bg-lime-800 disabled:opacity-60">
             {isSubmitting && <Loader2 className="h-4 w-4 animate-spin" />}
             Create Staff
           </button>

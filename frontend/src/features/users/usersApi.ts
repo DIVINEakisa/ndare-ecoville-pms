@@ -2,21 +2,22 @@ import { apiClient } from '../../services/apiClient';
 import type { ApiResponse, StaffUser, UserRole } from '../../types/api';
 
 export type CreateStaffUserInput = {
-  fullName: string;
-  email: string;
-  role: UserRole;
+  fullName:   string;
+  email:      string;
+  password:   string;
+  role:       UserRole;
   propertyId: string;
 };
 
 export type CreateStaffUserResponse = {
-  user: StaffUser;
-  temporaryPassword: string;
+  user: StaffUser | null;
+  reactivated: boolean;
 };
 
 export type ToggleStatusResponse = {
-  id: string;
+  id:       string;
   fullName: string;
-  email: string;
+  email:    string;
   isActive: boolean;
 };
 
