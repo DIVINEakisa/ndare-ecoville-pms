@@ -119,22 +119,32 @@ async function seed() {
 
   const ownerEmail = 'owner@ndareecoville.rw';
   const ownerPassword = 'ChangeMe123!';
-  await User.findOneAndUpdate(
-    { email: ownerEmail },
-    {
+
+  const existingOwner = await User.findOne({ email: ownerEmail });
+  if (existingOwner) {
+    // Always keep both properties assigned — update every seed run
+    await User.updateOne(
+      { email: ownerEmail },
+      {
+        fullName: 'Ndare Ecoville Owner',
+        role: 'Owner',
+        assignedPropertyIds: createdProperties.map((p) => p._id),
+        activePropertyId: createdProperties[0]?._id,
+        isActive: true
+      }
+    );
+  } else {
+    await User.create({
       fullName: 'Ndare Ecoville Owner',
       email: ownerEmail,
       passwordHash: await bcrypt.hash(ownerPassword, env.BCRYPT_ROUNDS),
       role: 'Owner',
-      assignedPropertyIds: createdProperties.map((property) => property._id),
+      assignedPropertyIds: createdProperties.map((p) => p._id),
       activePropertyId: createdProperties[0]?._id,
       isActive: true
-    },
-    { upsert: true, setDefaultsOnInsert: true }
-  );
-
-  console.log('Seed complete');
-  console.log(`Owner login: ${ownerEmail} / ${ownerPassword}`);
+    });
+    console.log(`Owner login: ${ownerEmail} / ${ownerPassword}`);
+  }
   process.exit(0);
 }
 
