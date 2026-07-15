@@ -40,139 +40,118 @@ const features = [
 
 export function LandingPage() {
   return (
-    <main className="min-h-screen bg-slate-50 text-slate-950">
+    <main className="min-h-screen overflow-x-hidden bg-slate-50 text-slate-950">
       <header className="sticky top-0 z-50 border-b border-slate-200/80 bg-white/90 backdrop-blur-xl">
-        <nav className="mx-auto flex h-20 max-w-7xl items-center justify-between px-5 sm:px-8">
-          <Link to="/" className="flex items-center gap-3">
-            <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-slate-900 text-white shadow-lg shadow-slate-900/15">
-              <Building2 className="h-6 w-6 text-lime-300" />
+        <nav className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:h-20 sm:px-8">
+          <Link to="/" className="flex items-center gap-2.5">
+            <div className="flex h-9 w-9 items-center justify-center rounded-2xl bg-slate-900 text-white shadow-lg shadow-slate-900/15 sm:h-11 sm:w-11">
+              <Building2 className="h-5 w-5 text-lime-300 sm:h-6 sm:w-6" />
             </div>
             <div>
-              <p className="text-sm font-black tracking-[0.22em] text-slate-950">
-                NVH
-              </p>
-              <p className="text-xs font-medium text-slate-500">
-                Digital Products & Solutions
-              </p>
+              <p className="text-sm font-black tracking-[0.22em] text-slate-950">NVH</p>
+              <p className="text-xs font-medium text-slate-500">Digital Products & Solutions</p>
             </div>
           </Link>
 
           <div className="hidden items-center gap-8 text-sm font-semibold text-slate-600 md:flex">
-            <a
-              href="#features"
-              className="transition-colors hover:text-slate-950"
-            >
-              Features
-            </a>
-            <a
-              href="#pricing"
-              className="transition-colors hover:text-slate-950"
-            >
-              Pricing
-            </a>
-            <a href="#about" className="transition-colors hover:text-slate-950">
-              About Us
-            </a>
+            <a href="#features" className="transition-colors hover:text-slate-950">Features</a>
+            <a href="#pricing" className="transition-colors hover:text-slate-950">Pricing</a>
+            <a href="#about" className="transition-colors hover:text-slate-950">About Us</a>
           </div>
 
           <Link
             to="/login"
-            className="rounded-2xl bg-slate-950 px-4 py-2.5 text-sm font-semibold text-white shadow-lg shadow-slate-900/15 transition-all hover:-translate-y-0.5 hover:bg-slate-800"
+            className="rounded-2xl bg-slate-950 px-3.5 py-2 text-sm font-semibold text-white shadow-lg shadow-slate-900/15 transition-all hover:-translate-y-0.5 hover:bg-slate-800 sm:px-4 sm:py-2.5"
           >
             Client Sign In
           </Link>
         </nav>
       </header>
 
+      {/* ── Hero ── */}
       <section className="relative overflow-hidden bg-slate-50">
         <div className="absolute inset-0 opacity-80 [background-image:linear-gradient(rgba(15,23,42,0.05)_1px,transparent_1px),linear-gradient(90deg,rgba(15,23,42,0.05)_1px,transparent_1px)] [background-size:44px_44px]" />
-        <div className="absolute right-0 top-0 h-96 w-96 rounded-full bg-lime-200/50 blur-3xl" />
-        <div className="absolute bottom-0 left-1/3 h-72 w-72 rounded-full bg-slate-200/70 blur-3xl" />
+        <div className="absolute right-0 top-0 h-72 w-72 rounded-full bg-lime-200/50 blur-3xl sm:h-96 sm:w-96" />
+        <div className="absolute bottom-0 left-1/3 h-56 w-56 rounded-full bg-slate-200/70 blur-3xl sm:h-72 sm:w-72" />
 
-        <div className="relative mx-auto grid min-h-[calc(100vh-80px)] max-w-7xl items-center gap-12 px-5 py-16 sm:px-8 lg:grid-cols-[0.95fr_1.05fr]">
+        <div className="relative mx-auto max-w-7xl px-4 py-14 sm:px-8 sm:py-20 lg:grid lg:min-h-[calc(100vh-80px)] lg:grid-cols-[0.95fr_1.05fr] lg:items-center lg:gap-12">
           <motion.div
             initial={{ opacity: 0, y: 18 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5 }}
           >
-            <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-lime-200 bg-white px-4 py-2 text-sm font-semibold text-lime-800 shadow-sm">
-              <ShieldCheck className="h-4 w-4" />
-              Built for boutique hotels, eco-villes, and apartment stays
+            <div className="mb-5 inline-flex max-w-full items-center gap-2 rounded-full border border-lime-200 bg-white px-3 py-1.5 text-xs font-semibold text-lime-800 shadow-sm sm:px-4 sm:py-2 sm:text-sm">
+              <ShieldCheck className="h-3.5 w-3.5 shrink-0 sm:h-4 sm:w-4" />
+              <span className="truncate">Built for boutique hotels, eco-villes, and apartment stays</span>
             </div>
-            <h1 className="max-w-4xl text-5xl font-black leading-[1.02] tracking-tight text-slate-950 sm:text-6xl lg:text-7xl">
-              The Complete Digital Operating System for Modern Boutique Hotels &
-              Eco-Villes.
+            <h1 className="text-4xl font-black leading-[1.05] tracking-tight text-slate-950 sm:text-5xl lg:text-6xl xl:text-7xl">
+              The Complete Digital Operating System for Modern Boutique Hotels &amp; Eco-Villes.
             </h1>
-            <p className="mt-6 max-w-2xl text-lg leading-8 text-slate-600">
-              Automate check-ins, streamline restaurant orders via QR codes,
-              track multi-property stock, and centralize your operations in one
-              premium dashboard built for local and global needs.
+            <p className="mt-5 max-w-2xl text-base leading-7 text-slate-600 sm:mt-6 sm:text-lg sm:leading-8">
+              Automate check-ins, streamline restaurant orders via QR codes, track multi-property stock, and centralize your operations in one premium dashboard built for local and global needs.
             </p>
-            <div className="mt-8 flex flex-col gap-3 sm:flex-row">
+            <div className="mt-7 flex flex-col gap-3 sm:mt-8 sm:flex-row">
               <Link
                 to="/login"
-                className="inline-flex items-center justify-center gap-3 rounded-full bg-lime-700 px-8 py-4 text-base font-bold text-white shadow-md shadow-lime-700/20 transition-all hover:-translate-y-0.5 hover:bg-lime-800"
+                className="inline-flex items-center justify-center gap-3 rounded-full bg-lime-700 px-6 py-3.5 text-base font-bold text-white shadow-md shadow-lime-700/20 transition-all hover:-translate-y-0.5 hover:bg-lime-800 sm:px-8 sm:py-4"
               >
                 Explore Workspace Demo
                 <ArrowRight className="h-5 w-5" />
               </Link>
               <a
                 href="#features"
-                className="inline-flex items-center justify-center rounded-full border border-slate-300 bg-white px-8 py-4 text-base font-bold text-slate-800 shadow-sm transition-all hover:-translate-y-0.5 hover:border-slate-400"
+                className="inline-flex items-center justify-center rounded-full border border-slate-300 bg-white px-6 py-3.5 text-base font-bold text-slate-800 shadow-sm transition-all hover:-translate-y-0.5 hover:border-slate-400 sm:px-8 sm:py-4"
               >
                 View features
               </a>
             </div>
           </motion.div>
 
+          {/* Dashboard mock — hidden on small screens, shown from lg up */}
           <motion.div
             initial={{ opacity: 0, y: 24, scale: 0.98 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             transition={{ duration: 0.55, delay: 0.1 }}
-            className="relative"
+            className="mt-12 hidden lg:mt-0 lg:block"
           >
             <DashboardMock />
           </motion.div>
         </div>
       </section>
 
-      <section id="features" className="mx-auto max-w-7xl px-5 py-24 sm:px-8">
-        <div className="mb-12 max-w-3xl">
+      <section id="features" className="mx-auto max-w-7xl px-4 py-16 sm:px-8 sm:py-24">
+        <div className="mb-10 max-w-3xl sm:mb-12">
           <p className="text-sm font-black uppercase tracking-[0.22em] text-lime-700">
             Core Platform
           </p>
-          <h2 className="mt-3 text-4xl font-black tracking-tight text-slate-950">
+          <h2 className="mt-3 text-3xl font-black tracking-tight text-slate-950 sm:text-4xl">
             Everything your team needs to operate calmly.
           </h2>
         </div>
-        <div className="grid gap-6 lg:grid-cols-3">
+        <div className="grid gap-5 sm:gap-6 md:grid-cols-2 lg:grid-cols-3">
           {features.map((feature) => (
             <motion.article
               key={feature.title}
               whileHover={{ y: -4 }}
-              className="rounded-3xl border border-slate-200 bg-white p-8 shadow-[0_18px_45px_rgba(15,23,42,0.06)]"
+              className="rounded-3xl border border-slate-200 bg-white p-6 shadow-[0_18px_45px_rgba(15,23,42,0.06)] sm:p-8"
             >
-              <div className="mb-6 flex h-12 w-12 items-center justify-center rounded-2xl bg-lime-50 text-lime-700">
-                <feature.icon className="h-6 w-6" />
+              <div className="mb-5 flex h-11 w-11 items-center justify-center rounded-2xl bg-lime-50 text-lime-700 sm:mb-6 sm:h-12 sm:w-12">
+                <feature.icon className="h-5 w-5 sm:h-6 sm:w-6" />
               </div>
-              <h3 className="text-xl font-bold text-slate-950">
-                {feature.title}
-              </h3>
-              <p className="mt-3 leading-7 text-slate-950">
-                {feature.description}
-              </p>
+              <h3 className="text-lg font-bold text-slate-950 sm:text-xl">{feature.title}</h3>
+              <p className="mt-3 leading-7 text-slate-600">{feature.description}</p>
             </motion.article>
           ))}
         </div>
       </section>
 
-      <section id="about" className="bg-slate-900 py-20 text-white">
-        <div className="mx-auto grid max-w-7xl gap-10 px-5 sm:px-8 lg:grid-cols-[0.9fr_1.1fr] lg:items-center">
+      <section id="about" className="bg-slate-900 py-16 text-white sm:py-20">
+        <div className="mx-auto grid max-w-7xl gap-8 px-4 sm:px-8 lg:grid-cols-[0.9fr_1.1fr] lg:items-center lg:gap-10">
           <div>
             <p className="text-sm font-black uppercase tracking-[0.22em] text-lime-300">
               Built for Rwanda
             </p>
-            <h2 className="mt-4 text-4xl font-black tracking-tight">
+            <h2 className="mt-4 text-3xl font-black tracking-tight sm:text-4xl">
               Local payment rails. Local support. Global-grade operations.
             </h2>
           </div>
@@ -191,52 +170,40 @@ export function LandingPage() {
         </div>
       </section>
 
-      <section id="pricing" className="mx-auto max-w-7xl px-5 py-24 sm:px-8">
+      <section id="pricing" className="mx-auto max-w-7xl px-4 py-16 sm:px-8 sm:py-24">
         <div className="mx-auto max-w-3xl text-center">
           <p className="text-sm font-black uppercase tracking-[0.22em] text-lime-700">
             Transparent Pricing
           </p>
-          <h2 className="mt-3 text-4xl font-black tracking-tight text-slate-950">
+          <h2 className="mt-3 text-3xl font-black tracking-tight text-slate-950 sm:text-4xl">
             Simple investment, complete operating stack.
           </h2>
         </div>
-        <div className="mx-auto mt-12 grid max-w-5xl gap-6 lg:grid-cols-2">
+        <div className="mx-auto mt-10 grid max-w-5xl gap-5 sm:mt-12 sm:gap-6 lg:grid-cols-2">
           <PricingCard
             label="Setup Tier"
             price="$150"
             suffix="One-Time Setup Fee"
-            items={[
-              "Dual-property customization",
-              "System configuration",
-              "2 weeks of team training",
-            ]}
+            items={["Dual-property customization", "System configuration", "2 weeks of team training"]}
           />
           <PricingCard
             label="Subscription Tier"
             price="$200"
             suffix="/ month"
-            items={[
-              "Full cloud hosting",
-              "Support and maintenance",
-              "Active sync maintenance",
-            ]}
+            items={["Full cloud hosting", "Support and maintenance", "Active sync maintenance"]}
             featured
           />
         </div>
       </section>
 
       <footer className="border-t border-slate-200 bg-white">
-        <div className="mx-auto flex max-w-7xl flex-col gap-4 px-5 py-8 text-sm text-slate-600 sm:px-8 md:flex-row md:items-center md:justify-between">
+        <div className="mx-auto flex max-w-7xl flex-col gap-3 px-4 py-6 text-sm text-slate-600 sm:px-8 sm:py-8 md:flex-row md:items-center md:justify-between">
           <p className="font-semibold text-slate-900">
             © {new Date().getFullYear()} Ndare Ecoville. All rights reserved.
           </p>
-          <div className="flex flex-col gap-2 md:flex-row md:gap-6">
-            <a href="mailto:info@ndareecoville.rw" className="hover:text-slate-950">
-              info@ndareecoville.rw
-            </a>
-            <a href="tel:+250794485969" className="hover:text-slate-950">
-              +250 794 485 969
-            </a>
+          <div className="flex flex-col gap-1.5 md:flex-row md:gap-6">
+            <a href="mailto:info@ndareecoville.rw" className="hover:text-slate-950">info@ndareecoville.rw</a>
+            <a href="tel:+250794485969" className="hover:text-slate-950">+250 794 485 969</a>
             <span>Kigali, Rwanda</span>
           </div>
         </div>
