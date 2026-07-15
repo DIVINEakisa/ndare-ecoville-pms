@@ -174,6 +174,7 @@ function TakeOrdersTab({
   orders,
   ordersLoading,
   guests,
+  guestsLoading,
   rooms,
 }: {
   propertyId: string;
@@ -364,12 +365,12 @@ function TakeOrdersTab({
                 name="guestId"
                 required
                 className={selectCls}
-                disabled={!propertyId || guestsQuery.isLoading}
+                disabled={!propertyId || guestsLoading}
               >
                 <option value="">
                   {!propertyId
                     ? "Select property first"
-                    : guestsQuery.isLoading
+                    : guestsLoading
                       ? "Loading guests…"
                       : guests.length === 0
                         ? "No checked-in guests found"
