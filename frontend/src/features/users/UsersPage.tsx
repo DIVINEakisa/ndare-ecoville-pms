@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { AnimatePresence, motion } from 'framer-motion';
-import { AlertTriangle, Loader2, Plus, UserCheck, UserRound, UserX, X } from 'lucide-react';
+import { AlertTriangle, Loader2, Plus, Trash2, UserCheck, UserRound, UserX, X } from 'lucide-react';
 import { useState } from 'react';
 import toast from 'react-hot-toast';
 import { PageHeader } from '../../components/ui/PageHeader';
@@ -10,6 +10,7 @@ import { useAuth } from '../auth/AuthProvider';
 import { getProperties } from '../dashboard/dashboardApi';
 import {
   createStaffUser,
+  deleteStaffUser,
   listStaffUsers,
   toggleStaffStatus,
   type CreateStaffUserInput
@@ -32,7 +33,8 @@ export function UsersPage() {
   const queryClient = useQueryClient();
 
   const [createModalOpen, setCreateModalOpen] = useState(false);
-  const [toggleTarget, setToggleTarget] = useState<StaffUser | null>(null);
+  const [toggleTarget, setToggleTarget]       = useState<StaffUser | null>(null);
+  const [deleteTarget, setDeleteTarget]       = useState<StaffUser | null>(null);
 
   const usersQuery      = useQuery({ queryKey: ['staff-users'], queryFn: listStaffUsers });
   const propertiesQuery = useQuery({ queryKey: ['properties'],  queryFn: getProperties });
@@ -53,7 +55,6 @@ export function UsersPage() {
       const verb = result.isActive ? 'reactivated' : 'deactivated';
       toast.success(`${result.fullName} has been ${verb}.`);
       setToggleTarget(null);
-      // Optimistically flip isActive in the cached list — no refetch needed
       queryClient.setQueryData<StaffUser[]>(['staff-users'], (prev) =>
         prev?.map((u) =>
           u._id === result.id ? { ...u, isActive: result.isActive } : u
@@ -61,6 +62,18 @@ export function UsersPage() {
       );
     },
     onError: () => toast.error('Could not update staff status. Please try again.')
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: (userId: string) => deleteStaffUser(userId),
+    onSuccess: (result) => {
+      toast.success(`${result.fullName} has been removed.`);
+      setDeleteTarget(null);
+      queryClient.setQueryData<StaffUser[]>(['staff-users'], (prev) =>
+        prev?.filter((u) => u._id !== result.id) ?? []
+      );
+    },
+    onError: () => toast.error('Could not remove staff member. Please try again.')
   });
 
   return (
@@ -154,10 +167,20 @@ export function UsersPage() {
                     {/* Toggle action — hidden for own row */}
                     <td className="px-6 py-4 text-right">
                       {!isSelf && (
-                        <ToggleButton
-                          isActive={staffUser.isActive}
-                          onClick={() => setToggleTarget(staffUser)}
-                        />
+                        <div className="flex items-center justify-end gap-2">
+                          <ToggleButton
+                            isActive={staffUser.isActive}
+                            onClick={() => setToggleTarget(staffUser)}
+                          />
+                          <button
+                            onClick={() => setDeleteTarget(staffUser)}
+                            title="Remove permanently"
+                            className="inline-flex items-center gap-1.5 rounded-xl border border-red-200 bg-red-50 px-3 py-1.5 text-xs font-semibold text-red-600 transition-colors hover:bg-red-100 dark:border-red-900 dark:bg-red-950/40 dark:text-red-400 dark:hover:bg-red-950"
+                          >
+                            <Trash2 className="h-3.5 w-3.5" />
+                            Remove
+                          </button>
+                        </div>
                       )}
                     </td>
                   </tr>
@@ -188,6 +211,18 @@ export function UsersPage() {
             isSubmitting={toggleMutation.isPending}
             onClose={() => setToggleTarget(null)}
             onConfirm={() => toggleMutation.mutate(toggleTarget._id)}
+          />
+        )}
+      </AnimatePresence>
+
+      {/* ── Delete confirmation modal ── */}
+      <AnimatePresence>
+        {deleteTarget && (
+          <DeleteUserModal
+            staffUser={deleteTarget}
+            isSubmitting={deleteMutation.isPending}
+            onClose={() => setDeleteTarget(null)}
+            onConfirm={() => deleteMutation.mutate(deleteTarget._id)}
           />
         )}
       </AnimatePresence>
@@ -395,7 +430,83 @@ function EmptyStaff({ onAdd }: { onAdd: () => void }) {
   );
 }
 
-// ─── Create staff modal ────────────────────────────────────────────────────
+// ─── Delete user confirmation modal ───────────────────────────────────────
+
+function DeleteUserModal({
+  staffUser,
+  isSubmitting,
+  onClose,
+  onConfirm
+}: {
+  staffUser: StaffUser;
+  isSubmitting: boolean;
+  onClose: () => void;
+  onConfirm: () => void;
+}) {
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/60 p-4 backdrop-blur-sm">
+      <motion.div
+        initial={{ opacity: 0, y: 16, scale: 0.97 }}
+        animate={{ opacity: 1, y: 0, scale: 1 }}
+        exit={{ opacity: 0, y: 8, scale: 0.97 }}
+        transition={{ duration: 0.2 }}
+        className="w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl dark:bg-slate-900"
+      >
+        <div className="flex items-start justify-between gap-4">
+          <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-red-50 dark:bg-red-950/50">
+            <Trash2 className="h-6 w-6 text-red-600 dark:text-red-400" />
+          </div>
+          <button onClick={onClose} className="rounded-xl p-2 text-slate-400 transition-colors hover:bg-slate-100 dark:hover:bg-slate-800">
+            <X className="h-5 w-5" />
+          </button>
+        </div>
+
+        <div className="mt-4">
+          <h2 className="text-lg font-semibold text-slate-950 dark:text-white">
+            Remove staff member?
+          </h2>
+          <p className="mt-2 text-sm leading-6 text-slate-500 dark:text-slate-400">
+            You are about to permanently remove{' '}
+            <span className="font-semibold text-slate-900 dark:text-white">{staffUser.fullName}</span>{' '}
+            ({staffUser.email}) from the system.
+            They will be signed out immediately and lose all access.
+          </p>
+        </div>
+
+        <div className="mt-4 flex items-start gap-3 rounded-xl border border-red-200 bg-red-50 px-4 py-3 dark:border-red-900 dark:bg-red-950/30">
+          <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-red-600 dark:text-red-400" />
+          <p className="text-xs leading-5 text-red-700 dark:text-red-300">
+            All active sessions will be revoked immediately. Their profile is soft-deleted
+            so historical records and reports are preserved, but they cannot log in again.
+            This action cannot be undone.
+          </p>
+        </div>
+
+        <div className="mt-6 flex justify-end gap-3">
+          <button
+            type="button"
+            onClick={onClose}
+            disabled={isSubmitting}
+            className="rounded-2xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 transition-colors hover:bg-slate-50 disabled:opacity-60 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-200"
+          >
+            Cancel
+          </button>
+          <button
+            type="button"
+            onClick={onConfirm}
+            disabled={isSubmitting}
+            className="inline-flex items-center gap-2 rounded-2xl bg-red-600 px-4 py-2.5 text-sm font-semibold text-white shadow-lg shadow-red-600/20 transition-colors hover:bg-red-700 disabled:opacity-60"
+          >
+            {isSubmitting
+              ? <><Loader2 className="h-4 w-4 animate-spin" />Removing…</>
+              : <><Trash2 className="h-4 w-4" />Yes, remove</>
+            }
+          </button>
+        </div>
+      </motion.div>
+    </div>
+  );
+}
 
 function CreateStaffModal({
   properties,

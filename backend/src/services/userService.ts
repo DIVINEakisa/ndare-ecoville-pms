@@ -108,6 +108,30 @@ export async function createStaffUser(input: {
   return { user: populated, invitationUrl, reactivated: false };
 }
 
+export async function deleteStaffUser(targetId: string, requesterId: string) {
+  if (targetId === requesterId) {
+    throw new AppError(400, 'You cannot delete your own account', 'SELF_DELETE');
+  }
+
+  const user = await User.findOne({ _id: targetId, deletedAt: null });
+  if (!user) throw new AppError(404, 'Staff member not found', 'USER_NOT_FOUND');
+
+  // Revoke all active sessions before deleting
+  await RefreshToken.updateMany(
+    { userId: targetId, revokedAt: null },
+    { revokedAt: new Date() }
+  );
+  await PasswordResetToken.deleteMany({ userId: targetId });
+
+  // Soft-delete — preserves history/audit trail
+  await User.updateOne(
+    { _id: targetId },
+    { deletedAt: new Date(), isActive: false, updatedBy: requesterId }
+  );
+
+  return { id: targetId, fullName: user.fullName, email: user.email };
+}
+
 export async function toggleUserStatus(targetId: string, requesterId: string) {
   // Prevent self-toggle — owners must not lock themselves out
   if (targetId === requesterId) {

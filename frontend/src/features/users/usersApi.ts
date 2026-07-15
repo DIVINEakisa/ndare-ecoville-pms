@@ -36,3 +36,10 @@ export async function toggleStaffStatus(userId: string) {
   );
   return data.data;
 }
+
+export async function deleteStaffUser(userId: string) {
+  const { data } = await apiClient.delete<ApiResponse<{ id: string; fullName: string; email: string }>>(
+    `/users/${userId}`
+  );
+  return data.data;
+}

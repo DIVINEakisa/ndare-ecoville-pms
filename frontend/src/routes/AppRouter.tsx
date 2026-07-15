@@ -64,6 +64,9 @@ const LandingPage = lazy(() =>
 const ResetPasswordPage = lazy(() =>
   import('../features/auth/ResetPasswordPage').then((module) => ({ default: module.ResetPasswordPage }))
 );
+const ForgotPasswordPage = lazy(() =>
+  import('../features/auth/ForgotPasswordPage').then((module) => ({ default: module.ForgotPasswordPage }))
+);
 const PublicOrderPage = lazy(() =>
   import('../features/public-order/PublicOrderPage').then((module) => ({ default: module.PublicOrderPage }))
 );
@@ -89,6 +92,7 @@ export function AppRouter() {
           <Route path="/" element={<LandingPage />} />
           <Route path="/login" element={<LoginPage />} />
           <Route path="/reset-password" element={<ResetPasswordPage />} />
+          <Route path="/forgot-password" element={<ForgotPasswordPage />} />
           <Route path="/order/:propertyId" element={<PublicOrderPage />} />
           <Route element={<GuestPortalLayout />}>
             <Route path="/guest-portal/:propertyId/:roomId" element={<GuestPortalPage />} />

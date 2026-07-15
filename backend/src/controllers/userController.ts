@@ -1,6 +1,6 @@
 import type { Request, Response } from 'express';
 import { sendStaffInvitationEmail } from '../services/emailService.js';
-import { createStaffUser, listUsers, toggleUserStatus } from '../services/userService.js';
+import { createStaffUser, deleteStaffUser, listUsers, toggleUserStatus } from '../services/userService.js';
 import { ok, created } from '../utils/apiResponse.js';
 
 export async function listUsersController(_req: Request, res: Response) {
@@ -37,10 +37,12 @@ export async function createUserController(req: Request, res: Response) {
 }
 
 export async function toggleUserStatusController(req: Request, res: Response) {
-  const result = await toggleUserStatus(
-    req.params.id,
-    req.user!.id
-  );
+  const result = await toggleUserStatus(req.params.id, req.user!.id);
   const verb = result.isActive ? 'reactivated' : 'deactivated';
   return ok(res, result, `${result.fullName} has been ${verb}`);
+}
+
+export async function deleteUserController(req: Request, res: Response) {
+  const result = await deleteStaffUser(req.params.id, req.user!.id);
+  return ok(res, result, `${result.fullName} has been permanently removed`);
 }

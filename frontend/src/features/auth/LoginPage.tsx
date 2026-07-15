@@ -124,6 +124,15 @@ export function LoginPage() {
                 Sign in
               </button>
             </form>
+
+            <div className="mt-5 text-center">
+              <Link
+                to="/forgot-password"
+                className="text-sm text-slate-500 transition hover:text-lime-700 dark:text-slate-400"
+              >
+                Forgot your password?
+              </Link>
+            </div>
           </motion.div>
       </section>
     </main>
