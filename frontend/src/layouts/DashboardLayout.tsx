@@ -17,6 +17,7 @@ import {
   Soup,
   SunMoon,
   ChefHat,
+  Sparkles,
   UserCog,
   Users,
   X
@@ -102,6 +103,12 @@ const ALL_NAV_GROUPS: NavGroup[] = [
         href: '/kitchen',
         icon: ChefHat,
         roles: ['Owner', 'Admin', 'Property Manager', 'Kitchen Staff']
+      },
+      {
+        label: 'Housekeeping',
+        href: '/housekeeping',
+        icon: Sparkles,
+        roles: ['Owner', 'Admin', 'Property Manager', 'Housekeeper']
       },
       {
         label: 'Folios',

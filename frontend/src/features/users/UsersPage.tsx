@@ -23,6 +23,7 @@ const roles: UserRole[] = [
   'Receptionist',
   'Cashier',
   'Kitchen Staff',
+  'Housekeeper',
   'Department Staff'
 ];
 

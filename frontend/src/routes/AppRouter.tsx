@@ -28,6 +28,9 @@ const FoliosPage = lazy(() =>
 const RestaurantPage = lazy(() =>
   import('../features/restaurant/RestaurantPage').then((module) => ({ default: module.RestaurantPage }))
 );
+const HousekeepingPage = lazy(() =>
+  import('../features/operations/HousekeepingPage').then((module) => ({ default: module.HousekeepingPage }))
+);
 const KitchenQueuePage = lazy(() =>
   import('../features/restaurant/KitchenQueuePage').then((module) => ({ default: module.KitchenQueuePage }))
 );
@@ -108,6 +111,7 @@ export function AppRouter() {
               <Route path="/check-out" element={<CheckOutPage />} />
               <Route path="/restaurant" element={<RestaurantPage />} />
               <Route path="/kitchen" element={<KitchenQueuePage />} />
+              <Route path="/housekeeping" element={<HousekeepingPage />} />
               <Route path="/folios" element={<FoliosPage />} />
               <Route path="/inventory" element={<InventoryPage />} />
               <Route path="/requisitions" element={<RequisitionsPage />} />
