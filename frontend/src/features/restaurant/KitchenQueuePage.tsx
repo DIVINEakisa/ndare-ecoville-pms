@@ -9,6 +9,7 @@ import toast from 'react-hot-toast';
 import { EmptyState } from '../../components/ui/EmptyState';
 import { PageHeader } from '../../components/ui/PageHeader';
 import { Skeleton } from '../../components/ui/Skeleton';
+import { useProperty } from '../../contexts/PropertyContext';
 import { getProperties } from '../dashboard/dashboardApi';
 import {
   listOrders,
@@ -94,7 +95,7 @@ function publicToAnyOrder(o: PublicOrder): AnyOrder {
 
 // ─── Page ──────────────────────────────────────────────────────────────────────
 export function KitchenQueuePage() {
-  const [propertyId, setPropertyId] = useState('');
+  const { activePropertyId: propertyId, setActivePropertyId } = useProperty();
   const queryClient = useQueryClient();
 
   // Track which order IDs we've already seen so we can pulse new arrivals
@@ -109,7 +110,7 @@ export function KitchenQueuePage() {
   // Auto-select first property once loaded
   useEffect(() => {
     if (!propertyId && propertiesQuery.data?.length) {
-      setPropertyId(propertiesQuery.data[0]._id);
+      setActivePropertyId(propertiesQuery.data[0]._id);
     }
   }, [propertiesQuery.data, propertyId]);
 
@@ -233,7 +234,7 @@ export function KitchenQueuePage() {
         </label>
         <select
           value={propertyId}
-          onChange={(e) => setPropertyId(e.target.value)}
+          onChange={(e) => setActivePropertyId(e.target.value)}
           className="h-10 flex-1 rounded-2xl border border-slate-200 bg-white px-4 text-sm outline-none ring-lime-700 focus:ring-2 dark:border-slate-800 dark:bg-slate-950 dark:text-white"
         >
           <option value="">All properties</option>

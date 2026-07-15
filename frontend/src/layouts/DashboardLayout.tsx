@@ -27,6 +27,8 @@ import { useState } from 'react';
 import { NavLink, Outlet, useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { useAuth } from '../features/auth/AuthProvider';
+import { useProperty } from '../contexts/PropertyContext';
+import { getProperties } from '../features/dashboard/dashboardApi';
 import { listNotifications } from '../features/supply/supplyApi';
 import type { UserRole } from '../types/api';
 
@@ -276,10 +278,14 @@ export function DashboardLayout() {
   const notifQuery = useQuery({
     queryKey: ['notifications-unread'],
     queryFn: () => listNotifications({ limit: 1, unreadOnly: true }),
-    refetchInterval: 15_000, // refresh every 15 s
+    refetchInterval: 15_000,
     staleTime: 10_000,
   });
   const unreadCount = notifQuery.data?.unread ?? 0;
+
+  // Global property selector
+  const { activePropertyId, setActivePropertyId } = useProperty();
+  const propertiesQuery = useQuery({ queryKey: ['properties'], queryFn: getProperties });
 
   const toggleTheme = () => {
     document.documentElement.classList.toggle('dark');
@@ -377,11 +383,16 @@ export function DashboardLayout() {
             />
           </div>
 
-          {/* Property selector */}
-          <select className="hidden h-11 rounded-2xl border border-slate-200 bg-white px-3 text-sm font-medium text-slate-800 shadow-sm outline-none ring-lime-700 transition-colors focus:ring-2 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-200 xl:block">
-            <option>All properties</option>
-            <option>Ndare Ecoville</option>
-            <option>Property 2</option>
+          {/* Property selector — global filter, persists across pages */}
+          <select
+            value={activePropertyId}
+            onChange={(e) => setActivePropertyId(e.target.value)}
+            className="hidden h-11 rounded-2xl border border-slate-200 bg-white px-3 text-sm font-medium text-slate-800 shadow-sm outline-none ring-lime-700 transition-colors focus:ring-2 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-200 xl:block"
+          >
+            <option value="">All properties</option>
+            {propertiesQuery.data?.map((p) => (
+              <option key={p._id} value={p._id}>{p.name}</option>
+            ))}
           </select>
 
           {/* Theme toggle */}

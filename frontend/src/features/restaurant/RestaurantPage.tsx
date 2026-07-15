@@ -16,6 +16,7 @@ import { EmptyState } from "../../components/ui/EmptyState";
 import { PageHeader } from "../../components/ui/PageHeader";
 import { Skeleton } from "../../components/ui/Skeleton";
 import { useAuth } from "../auth/AuthProvider";
+import { useProperty } from "../../contexts/PropertyContext";
 import { getProperties } from "../dashboard/dashboardApi";
 import { listGuests, listRooms } from "../operations/operationsApi";
 import {
@@ -50,14 +51,11 @@ const selectCls = inputCls + " cursor-pointer";
 // ─── Root page ──────────────────────────────────────────────────────────────
 export function RestaurantPage() {
   const { user } = useAuth();
+  const { activePropertyId: propertyId, setActivePropertyId } = useProperty();
   const canManage = MANAGEMENT_ROLES.includes(user?.role as UserRole);
   const [tab, setTab] = useState<Tab>("orders");
-  const [propertyId, setPropertyId] = useState("");
 
-  const propertiesQuery = useQuery({
-    queryKey: ["properties"],
-    queryFn: getProperties,
-  });
+  const propertiesQuery = useQuery({ queryKey: ["properties"], queryFn: getProperties });
   const menuItemsQuery = useQuery({
     queryKey: ["menu-items", propertyId],
     queryFn: () =>
@@ -98,7 +96,7 @@ export function RestaurantPage() {
         }
       />
 
-      {/* ── Property filter + Tab switcher ── */}
+      {/* ── Tab switcher ── */}
       <div className="mb-6 flex flex-col gap-3 rounded-2xl border border-slate-200/80 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-900 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex gap-1 rounded-xl bg-slate-100 p-1 dark:bg-slate-800">
           <TabBtn active={tab === "orders"} onClick={() => setTab("orders")}>
@@ -110,18 +108,6 @@ export function RestaurantPage() {
             </TabBtn>
           )}
         </div>
-        <select
-          value={propertyId}
-          onChange={(e) => setPropertyId(e.target.value)}
-          className="h-11 rounded-2xl border border-slate-200 bg-white px-4 text-sm outline-none ring-lime-700 focus:ring-2 dark:border-slate-800 dark:bg-slate-950"
-        >
-          <option value="">All properties</option>
-          {propertiesQuery.data?.map((p) => (
-            <option key={p._id} value={p._id}>
-              {p.name}
-            </option>
-          ))}
-        </select>
       </div>
 
       {/* ── Tab panels ── */}
@@ -136,7 +122,7 @@ export function RestaurantPage() {
           >
             <TakeOrdersTab
               propertyId={propertyId}
-              setPropertyId={setPropertyId}
+              setPropertyId={setActivePropertyId}
               properties={propertiesQuery.data ?? []}
               menuItems={menuItemsQuery.data?.items ?? []}
               menuLoading={menuItemsQuery.isLoading}

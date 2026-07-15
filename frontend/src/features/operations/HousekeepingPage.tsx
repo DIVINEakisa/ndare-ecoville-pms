@@ -9,6 +9,7 @@ import toast from 'react-hot-toast';
 import { EmptyState } from '../../components/ui/EmptyState';
 import { PageHeader } from '../../components/ui/PageHeader';
 import { Skeleton } from '../../components/ui/Skeleton';
+import { useProperty } from '../../contexts/PropertyContext';
 import { getProperties } from '../dashboard/dashboardApi';
 import { apiClient } from '../../services/apiClient';
 import type { ApiResponse, Room } from '../../types/api';
@@ -59,7 +60,7 @@ const NEXT_ACTIONS: Partial<Record<Room['status'], Array<{ status: Room['status'
 // ─── Page ──────────────────────────────────────────────────────────────────────
 
 export function HousekeepingPage() {
-  const [propertyId, setPropertyId] = useState('');
+  const { activePropertyId: propertyId } = useProperty();
   const [filterStatus, setFilterStatus] = useState<Room['status'] | 'all'>('all');
   const [confirmTarget, setConfirmTarget] = useState<{ room: Room; status: Room['status']; label: string } | null>(null);
   const queryClient = useQueryClient();
@@ -116,17 +117,6 @@ export function HousekeepingPage() {
 
       {/* Filters */}
       <div className="mb-6 flex flex-wrap items-center gap-3 rounded-2xl border border-slate-200/80 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-900">
-        <select
-          value={propertyId}
-          onChange={(e) => setPropertyId(e.target.value)}
-          className="h-10 rounded-xl border border-slate-200 bg-white px-3 text-sm outline-none ring-lime-700 focus:ring-2 dark:border-slate-700 dark:bg-slate-950 dark:text-white"
-        >
-          <option value="">All properties</option>
-          {propertiesQuery.data?.map((p) => (
-            <option key={p._id} value={p._id}>{p.name}</option>
-          ))}
-        </select>
-
         <div className="flex flex-wrap gap-2">
           {(['all', 'Occupied', 'Available', 'Maintenance', 'Reserved'] as const).map((s) => (
             <button

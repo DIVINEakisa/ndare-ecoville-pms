@@ -7,16 +7,17 @@ import { EmptyState } from '../../components/ui/EmptyState';
 import { PageHeader } from '../../components/ui/PageHeader';
 import { Skeleton } from '../../components/ui/Skeleton';
 import { Toolbar } from '../../components/ui/Toolbar';
+import { useProperty } from '../../contexts/PropertyContext';
 import { getProperties } from '../dashboard/dashboardApi';
 import { createRoom, listRooms } from './operationsApi';
 
 export function RoomsPage() {
   const queryClient = useQueryClient();
+  const { activePropertyId: propertyId } = useProperty();
   const [search, setSearch] = useState('');
-  const [propertyId, setPropertyId] = useState('');
   const [formOpen, setFormOpen] = useState(false);
   const properties = useQuery({ queryKey: ['properties'], queryFn: getProperties });
-  const rooms = useQuery({ queryKey: ['rooms', search, propertyId], queryFn: () => listRooms({ search, propertyId, limit: 25 }) });
+  const rooms = useQuery({ queryKey: ['rooms', search, propertyId], queryFn: () => listRooms({ search, propertyId: propertyId || undefined, limit: 100 }) });
   const mutation = useMutation({
     mutationFn: createRoom,
     onSuccess: () => {
@@ -39,14 +40,7 @@ export function RoomsPage() {
           </button>
         }
       />
-      <Toolbar search={search} onSearch={setSearch}>
-        <select value={propertyId} onChange={(event) => setPropertyId(event.target.value)} className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm dark:border-slate-800 dark:bg-slate-950">
-          <option value="">All properties</option>
-          {properties.data?.map((property) => (
-            <option key={property._id} value={property._id}>{property.name}</option>
-          ))}
-        </select>
-      </Toolbar>
+      <Toolbar search={search} onSearch={setSearch} />
       {formOpen && (
         <form
           className="mb-4 grid gap-3 rounded-lg border border-slate-200 bg-white p-4 dark:border-slate-800 dark:bg-slate-900 md:grid-cols-3"
