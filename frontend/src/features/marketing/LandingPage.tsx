@@ -41,7 +41,7 @@ const features = [
 export function LandingPage() {
   return (
     <main className="min-h-screen overflow-x-hidden bg-slate-50 text-slate-950">
-      <header className="sticky top-0 z-50 border-b border-slate-200/80 bg-white/90 backdrop-blur-xl">
+      <header className="fixed top-0 left-0 right-0 z-50 border-b border-slate-200/80 bg-white/90 backdrop-blur-xl">
         <nav className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:h-20 sm:px-8">
           <Link to="/" className="flex items-center gap-2.5">
             <div className="flex h-9 w-9 items-center justify-center rounded-2xl bg-slate-900 text-white shadow-lg shadow-slate-900/15 sm:h-11 sm:w-11">
@@ -69,7 +69,7 @@ export function LandingPage() {
       </header>
 
       {/* ── Hero ── */}
-      <section className="relative overflow-hidden bg-slate-50">
+      <section className="relative overflow-hidden bg-slate-50 pt-16 sm:pt-20">
         <div className="absolute inset-0 opacity-80 [background-image:linear-gradient(rgba(15,23,42,0.05)_1px,transparent_1px),linear-gradient(90deg,rgba(15,23,42,0.05)_1px,transparent_1px)] [background-size:44px_44px]" />
         <div className="absolute right-0 top-0 h-72 w-72 rounded-full bg-lime-200/50 blur-3xl sm:h-96 sm:w-96" />
         <div className="absolute bottom-0 left-1/3 h-56 w-56 rounded-full bg-slate-200/70 blur-3xl sm:h-72 sm:w-72" />
