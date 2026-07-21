@@ -168,6 +168,8 @@ export type StaffUser = {
   };
   isActive: boolean;
   createdAt: string;
+  /** Plaintext password — only populated in the browser cache after creation, never from the API list endpoint */
+  plainPassword?: string;
 };
 
 export type Folio = {

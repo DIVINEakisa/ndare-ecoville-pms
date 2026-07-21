@@ -21,7 +21,9 @@ export async function createUserController(req: Request, res: Response) {
     ? 'Staff account reactivated with new credentials'
     : 'Staff account created';
 
-  return created(res, result.user, message);
+  // Return the plaintext password once so the admin can share it with the
+  // staff member. It is never stored in plaintext — only the bcrypt hash is.
+  return created(res, { ...result, plainPassword: req.body.password }, message);
 }
 
 export async function toggleUserStatusController(req: Request, res: Response) {

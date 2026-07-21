@@ -12,6 +12,7 @@ export type CreateStaffUserInput = {
 export type CreateStaffUserResponse = {
   user: StaffUser | null;
   reactivated: boolean;
+  plainPassword: string;
 };
 
 export type ToggleStatusResponse = {

@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { AnimatePresence, motion } from 'framer-motion';
-import { AlertTriangle, Loader2, Plus, Trash2, UserCheck, UserRound, UserX, X } from 'lucide-react';
+import { AlertTriangle, Eye, EyeOff, Loader2, Plus, Trash2, UserCheck, UserRound, UserX, X } from 'lucide-react';
 import { useState } from 'react';
 import toast from 'react-hot-toast';
 import { PageHeader } from '../../components/ui/PageHeader';
@@ -47,6 +47,17 @@ export function UsersPage() {
       const verb = result.reactivated ? 'reactivated' : 'created';
       toast.success(`${name} has been ${verb}. They can now log in with the credentials you set.`);
       setCreateModalOpen(false);
+      // Inject plainPassword into the list cache so the Password column shows it
+      queryClient.setQueryData<StaffUser[]>(['staff-users'], (prev) => {
+        const updated = prev ? [...prev] : [];
+        const idx = updated.findIndex((u) => u._id === result.user?._id);
+        if (result.user) {
+          const enriched = { ...result.user, plainPassword: result.plainPassword };
+          if (idx >= 0) updated[idx] = enriched;
+          else updated.unshift(enriched);
+        }
+        return updated;
+      });
       queryClient.invalidateQueries({ queryKey: ['staff-users'] });
     },
     onError: (err: unknown) => {
@@ -107,12 +118,12 @@ export function UsersPage() {
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b border-slate-200 dark:border-slate-800">
-                {['Name', 'Email', 'Role', 'Property', 'Status', 'Actions'].map((h, i) => (
+                {['Name', 'Email', 'Role', 'Password', 'Property', 'Status', 'Actions'].map((h, i) => (
                   <th
                     key={h}
                     className={`px-6 py-4 text-xs font-semibold uppercase tracking-[0.12em] text-slate-500 dark:text-slate-400 ${
-                      i === 5 ? 'text-right' : 'text-left'
-                    } ${i === 1 ? 'hidden sm:table-cell' : ''} ${i === 3 ? 'hidden lg:table-cell' : ''}`}
+                      i === 6 ? 'text-right' : 'text-left'
+                    } ${i === 1 ? 'hidden sm:table-cell' : ''} ${i === 4 ? 'hidden lg:table-cell' : ''} ${i === 3 ? 'hidden md:table-cell' : ''}`}
                   >
                     {h}
                   </th>
@@ -159,6 +170,11 @@ export function UsersPage() {
                     {/* Role */}
                     <td className="px-6 py-4">
                       <RoleBadge role={staffUser.role} />
+                    </td>
+
+                    {/* Password — masked, show/hide toggle */}
+                    <td className="hidden px-6 py-4 md:table-cell">
+                      <PasswordCell password={staffUser.plainPassword} />
                     </td>
 
                     {/* Property */}
@@ -273,6 +289,38 @@ function ToggleButton({ isActive, onClick }: { isActive: boolean; onClick: () =>
       <UserCheck className="h-3.5 w-3.5" />
       Reactivate
     </button>
+  );
+}
+
+// ─── Password cell ─────────────────────────────────────────────────────────
+
+function PasswordCell({ password }: { password?: string }) {
+  const [visible, setVisible] = useState(false);
+
+  if (!password) {
+    return (
+      <span className="font-mono text-sm tracking-widest text-slate-300 dark:text-slate-600">
+        ••••••••
+      </span>
+    );
+  }
+
+  return (
+    <div className="flex items-center gap-2">
+      <span className="font-mono text-sm text-slate-700 dark:text-slate-300">
+        {visible ? password : '••••••••'}
+      </span>
+      <button
+        type="button"
+        onClick={() => setVisible((v) => !v)}
+        title={visible ? 'Hide password' : 'Show password'}
+        className="rounded-lg p-1 text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-700 dark:hover:bg-slate-800 dark:hover:text-slate-200"
+      >
+        {visible
+          ? <EyeOff className="h-3.5 w-3.5" />
+          : <Eye    className="h-3.5 w-3.5" />}
+      </button>
+    </div>
   );
 }
 
