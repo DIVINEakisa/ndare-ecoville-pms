@@ -10,9 +10,7 @@
  *   • Print All (PDF)  — browser print with @media print grid layout
  *   • Download ZIP     — all QRs rendered to canvas, packed into a ZIP
  */
-import { saveAs } from 'file-saver';
-import { AnimatePresence, motion } from 'framer-motion';
-import JSZip from 'jszip';
+import { AnimatePresence, motion } from 'framer-motion';import JSZip from 'jszip';
 import {
   BedDouble,
   Download,
@@ -375,7 +373,13 @@ function BatchLayout({
       }
 
       const zipBlob = await zip.generateAsync({ type: 'blob' });
-      saveAs(zipBlob, `${filenamePrefix}_qrcodes.zip`);
+      // Native download — no file-saver dependency needed
+      const url = URL.createObjectURL(zipBlob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `${filenamePrefix}_qrcodes.zip`;
+      a.click();
+      URL.revokeObjectURL(url);
     } finally {
       setZipping(false);
     }
