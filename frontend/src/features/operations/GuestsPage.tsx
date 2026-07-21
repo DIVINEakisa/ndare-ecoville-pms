@@ -7,16 +7,17 @@ import { EmptyState } from '../../components/ui/EmptyState';
 import { PageHeader } from '../../components/ui/PageHeader';
 import { Skeleton } from '../../components/ui/Skeleton';
 import { Toolbar } from '../../components/ui/Toolbar';
+import { useProperty } from '../../contexts/PropertyContext';
 import { getProperties } from '../dashboard/dashboardApi';
 import { createGuest, listGuests } from './operationsApi';
 
 export function GuestsPage() {
   const queryClient = useQueryClient();
+  const { activePropertyId: propertyId } = useProperty();
   const [search, setSearch] = useState('');
-  const [propertyId, setPropertyId] = useState('');
   const [formOpen, setFormOpen] = useState(false);
   const properties = useQuery({ queryKey: ['properties'], queryFn: getProperties });
-  const guests = useQuery({ queryKey: ['guests', search, propertyId], queryFn: () => listGuests({ search, propertyId, limit: 25 }) });
+  const guests = useQuery({ queryKey: ['guests', search, propertyId], queryFn: () => listGuests({ search, propertyId: propertyId || undefined, limit: 25 }) });
   const mutation = useMutation({
     mutationFn: createGuest,
     onSuccess: () => {
@@ -30,12 +31,7 @@ export function GuestsPage() {
   return (
     <div>
       <PageHeader title="Guests" breadcrumb={['Workspace', 'Guests']} actions={<button className="flex items-center gap-2 rounded-lg bg-lime-700 px-4 py-2 text-sm font-semibold text-white" onClick={() => setFormOpen((value) => !value)}><Plus className="h-4 w-4" />New guest</button>} />
-      <Toolbar search={search} onSearch={setSearch}>
-        <select value={propertyId} onChange={(event) => setPropertyId(event.target.value)} className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm dark:border-slate-800 dark:bg-slate-950">
-          <option value="">All properties</option>
-          {properties.data?.map((property) => <option key={property._id} value={property._id}>{property.name}</option>)}
-        </select>
-      </Toolbar>
+      <Toolbar search={search} onSearch={setSearch} />
       {formOpen && (
         <form className="mb-4 grid gap-3 rounded-lg border border-slate-200 bg-white p-4 dark:border-slate-800 dark:bg-slate-900 md:grid-cols-3" onSubmit={(event) => {
           event.preventDefault();

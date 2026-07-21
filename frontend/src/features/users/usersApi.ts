@@ -2,21 +2,22 @@ import { apiClient } from '../../services/apiClient';
 import type { ApiResponse, StaffUser, UserRole } from '../../types/api';
 
 export type CreateStaffUserInput = {
-  fullName: string;
-  email: string;
-  role: UserRole;
+  fullName:   string;
+  email:      string;
+  password:   string;
+  role:       UserRole;
   propertyId: string;
 };
 
 export type CreateStaffUserResponse = {
-  user: StaffUser;
-  temporaryPassword: string;
+  user: StaffUser | null;
+  reactivated: boolean;
 };
 
 export type ToggleStatusResponse = {
-  id: string;
+  id:       string;
   fullName: string;
-  email: string;
+  email:    string;
   isActive: boolean;
 };
 
@@ -33,6 +34,13 @@ export async function createStaffUser(input: CreateStaffUserInput) {
 export async function toggleStaffStatus(userId: string) {
   const { data } = await apiClient.patch<ApiResponse<ToggleStatusResponse>>(
     `/users/${userId}/toggle-status`
+  );
+  return data.data;
+}
+
+export async function deleteStaffUser(userId: string) {
+  const { data } = await apiClient.delete<ApiResponse<{ id: string; fullName: string; email: string }>>(
+    `/users/${userId}`
   );
   return data.data;
 }

@@ -7,21 +7,22 @@ import { EmptyState } from '../../components/ui/EmptyState';
 import { PageHeader } from '../../components/ui/PageHeader';
 import { Skeleton } from '../../components/ui/Skeleton';
 import { Toolbar } from '../../components/ui/Toolbar';
+import { useProperty } from '../../contexts/PropertyContext';
 import { getProperties } from '../dashboard/dashboardApi';
 import { createRequisition, decideRequisition, listInventory, listRequisitions } from './supplyApi';
 
 export function RequisitionsPage() {
   const queryClient = useQueryClient();
+  const { activePropertyId: propertyId } = useProperty();
   const [search, setSearch] = useState('');
-  const [propertyId, setPropertyId] = useState('');
   const [status, setStatus] = useState('');
   const [selectedItemId, setSelectedItemId] = useState('');
   const [formOpen, setFormOpen] = useState(false);
   const properties = useQuery({ queryKey: ['properties'], queryFn: getProperties });
-  const inventory = useQuery({ queryKey: ['requisition-inventory', propertyId], queryFn: () => listInventory({ propertyId, limit: 100 }) });
+  const inventory = useQuery({ queryKey: ['requisition-inventory', propertyId], queryFn: () => listInventory({ propertyId: propertyId || undefined, limit: 100 }) });
   const requisitions = useQuery({
     queryKey: ['requisitions', search, propertyId, status],
-    queryFn: () => listRequisitions({ search, propertyId, status, limit: 50 })
+    queryFn: () => listRequisitions({ search, propertyId: propertyId || undefined, status, limit: 50 })
   });
   const createMutation = useMutation({
     mutationFn: createRequisition,
@@ -48,10 +49,6 @@ export function RequisitionsPage() {
     <div>
       <PageHeader title="Requisitions" breadcrumb={['Workspace', 'Requisitions']} actions={<button className="flex items-center gap-2 rounded-lg bg-lime-700 px-4 py-2 text-sm font-semibold text-white" onClick={() => setFormOpen((value) => !value)}><Plus className="h-4 w-4" />New request</button>} />
       <Toolbar search={search} onSearch={setSearch}>
-        <select value={propertyId} onChange={(event) => setPropertyId(event.target.value)} className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm dark:border-slate-800 dark:bg-slate-950">
-          <option value="">All properties</option>
-          {properties.data?.map((property) => <option key={property._id} value={property._id}>{property.name}</option>)}
-        </select>
         <select value={status} onChange={(event) => setStatus(event.target.value)} className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm dark:border-slate-800 dark:bg-slate-950">
           <option value="">All statuses</option>
           <option>Pending</option>
@@ -72,7 +69,7 @@ export function RequisitionsPage() {
             items: [{ inventoryItemId: selectedItemId, quantity: Number(form.get('quantity')) }]
           });
         }}>
-          <select name="propertyId" required onChange={(event) => setPropertyId(event.target.value)} className="rounded-lg border border-slate-200 bg-white px-3 py-2 dark:border-slate-800 dark:bg-slate-950">
+          <select name="propertyId" required defaultValue={propertyId} className="rounded-lg border border-slate-200 bg-white px-3 py-2 dark:border-slate-800 dark:bg-slate-950">
             <option value="">Property</option>
             {properties.data?.map((property) => <option key={property._id} value={property._id}>{property.name}</option>)}
           </select>

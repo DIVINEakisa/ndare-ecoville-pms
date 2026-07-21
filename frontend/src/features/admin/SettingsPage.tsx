@@ -6,13 +6,12 @@ import { DataTable } from '../../components/ui/DataTable';
 import { EmptyState } from '../../components/ui/EmptyState';
 import { PageHeader } from '../../components/ui/PageHeader';
 import { Skeleton } from '../../components/ui/Skeleton';
-import { getProperties } from '../dashboard/dashboardApi';
+import { useProperty } from '../../contexts/PropertyContext';
 import { listEmailTemplates, listSettings, saveEmailTemplate, saveSetting } from './adminApi';
 
 export function SettingsPage() {
   const queryClient = useQueryClient();
-  const [propertyId, setPropertyId] = useState('');
-  const properties = useQuery({ queryKey: ['properties'], queryFn: getProperties });
+  const { activePropertyId: propertyId } = useProperty();
   const settings = useQuery({ queryKey: ['settings', propertyId], queryFn: () => listSettings({ propertyId }) });
   const templates = useQuery({ queryKey: ['email-templates'], queryFn: listEmailTemplates });
   const settingMutation = useMutation({
@@ -35,12 +34,11 @@ export function SettingsPage() {
   return (
     <div>
       <PageHeader title="Settings" breadcrumb={['Workspace', 'Settings']} />
-      <div className="mb-4 rounded-lg border border-slate-200 bg-white p-4 dark:border-slate-800 dark:bg-slate-900">
-        <select value={propertyId} onChange={(event) => setPropertyId(event.target.value)} className="w-full max-w-sm rounded-lg border border-slate-200 bg-white px-3 py-2 dark:border-slate-800 dark:bg-slate-950">
-          <option value="">Select property</option>
-          {properties.data?.map((property) => <option key={property._id} value={property._id}>{property.name}</option>)}
-        </select>
-      </div>
+      {!propertyId && (
+        <div className="mb-4 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-700 dark:border-amber-900 dark:bg-amber-950/30 dark:text-amber-300">
+          Select a property from the top bar to view and edit its settings.
+        </div>
+      )}
 
       <section className="grid gap-6 xl:grid-cols-2">
         <div>

@@ -31,6 +31,9 @@ const HousekeepingPage = lazy(() =>
 const RestaurantPage = lazy(() =>
   import('../features/restaurant/RestaurantPage').then((module) => ({ default: module.RestaurantPage }))
 );
+const HousekeepingPage = lazy(() =>
+  import('../features/operations/HousekeepingPage').then((module) => ({ default: module.HousekeepingPage }))
+);
 const KitchenQueuePage = lazy(() =>
   import('../features/restaurant/KitchenQueuePage').then((module) => ({ default: module.KitchenQueuePage }))
 );
@@ -67,6 +70,9 @@ const LandingPage = lazy(() =>
 const ResetPasswordPage = lazy(() =>
   import('../features/auth/ResetPasswordPage').then((module) => ({ default: module.ResetPasswordPage }))
 );
+const ForgotPasswordPage = lazy(() =>
+  import('../features/auth/ForgotPasswordPage').then((module) => ({ default: module.ForgotPasswordPage }))
+);
 const PublicOrderPage = lazy(() =>
   import('../features/public-order/PublicOrderPage').then((module) => ({ default: module.PublicOrderPage }))
 );
@@ -92,6 +98,7 @@ export function AppRouter() {
           <Route path="/" element={<LandingPage />} />
           <Route path="/login" element={<LoginPage />} />
           <Route path="/reset-password" element={<ResetPasswordPage />} />
+          <Route path="/forgot-password" element={<ForgotPasswordPage />} />
           <Route path="/order/:propertyId" element={<PublicOrderPage />} />
           <Route element={<GuestPortalLayout />}>
             <Route path="/guest-portal/:propertyId/:roomId" element={<GuestPortalPage />} />
@@ -107,6 +114,7 @@ export function AppRouter() {
               <Route path="/check-out" element={<CheckOutPage />} />
               <Route path="/restaurant" element={<RestaurantPage />} />
               <Route path="/kitchen" element={<KitchenQueuePage />} />
+              <Route path="/housekeeping" element={<HousekeepingPage />} />
               <Route path="/folios" element={<FoliosPage />} />
               <Route path="/housekeeping" element={<HousekeepingPage />} />
               <Route path="/inventory" element={<InventoryPage />} />

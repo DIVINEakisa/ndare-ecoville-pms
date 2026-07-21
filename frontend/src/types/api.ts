@@ -18,6 +18,7 @@ export type UserRole =
   | 'Cashier'
   | 'Housekeeper'
   | 'Kitchen Staff'
+  | 'Housekeeper'
   | 'Department Staff';
 
 export type CurrentUser = {

@@ -5,16 +5,15 @@ import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxi
 import { MetricCard } from '../../components/ui/MetricCard';
 import { PageHeader } from '../../components/ui/PageHeader';
 import { Skeleton } from '../../components/ui/Skeleton';
-import { getProperties } from '../dashboard/dashboardApi';
+import { useProperty } from '../../contexts/PropertyContext';
 import { downloadReportCsv, getReports } from './adminApi';
 
 const money = new Intl.NumberFormat('en-RW', { style: 'currency', currency: 'RWF', maximumFractionDigits: 0 });
 
 export function ReportsPage() {
-  const [propertyId, setPropertyId] = useState('');
+  const { activePropertyId: propertyId } = useProperty();
   const [from, setFrom] = useState('');
   const [to, setTo] = useState('');
-  const properties = useQuery({ queryKey: ['properties'], queryFn: getProperties });
   const reports = useQuery({
     queryKey: ['reports', propertyId, from, to],
     queryFn: () => getReports({ propertyId, from, to })
@@ -37,11 +36,7 @@ export function ReportsPage() {
         }
       />
 
-      <div className="mb-4 grid gap-3 rounded-lg border border-slate-200 bg-white p-4 dark:border-slate-800 dark:bg-slate-900 md:grid-cols-4">
-        <select value={propertyId} onChange={(event) => setPropertyId(event.target.value)} className="rounded-lg border border-slate-200 bg-white px-3 py-2 dark:border-slate-800 dark:bg-slate-950">
-          <option value="">All properties</option>
-          {properties.data?.map((property) => <option key={property._id} value={property._id}>{property.name}</option>)}
-        </select>
+      <div className="mb-4 grid gap-3 rounded-lg border border-slate-200 bg-white p-4 dark:border-slate-800 dark:bg-slate-900 md:grid-cols-3">
         <input type="date" value={from} onChange={(event) => setFrom(event.target.value)} className="rounded-lg border border-slate-200 px-3 py-2 dark:border-slate-800 dark:bg-slate-950" />
         <input type="date" value={to} onChange={(event) => setTo(event.target.value)} className="rounded-lg border border-slate-200 px-3 py-2 dark:border-slate-800 dark:bg-slate-950" />
       </div>

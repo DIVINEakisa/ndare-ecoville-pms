@@ -16,7 +16,6 @@ import {
   Percent,
   Users
 } from 'lucide-react';
-import { useState } from 'react';
 import {
   Area,
   AreaChart,
@@ -35,9 +34,9 @@ import { Skeleton } from '../../components/ui/Skeleton';
 import type { UserRole } from '../../types/api';
 import {
   getDashboardSummary,
-  getPortfolioSummary,
-  getProperties
+  getPortfolioSummary
 } from './dashboardApi';
+import { useProperty } from '../../contexts/PropertyContext';
 
 const money = new Intl.NumberFormat('en-RW', {
   style: 'currency',
@@ -46,10 +45,8 @@ const money = new Intl.NumberFormat('en-RW', {
 });
 
 export function OwnerDashboard({ role }: { role: UserRole }) {
-  const [propertyId, setPropertyId] = useState('');
+  const { activePropertyId: propertyId } = useProperty();
   const isOwnerOrAdmin = role === 'Owner' || role === 'Admin';
-
-  const propertiesQuery = useQuery({ queryKey: ['properties'], queryFn: getProperties });
 
   const summaryQuery = useQuery({
     queryKey: ['dashboard-summary', propertyId],
@@ -109,18 +106,6 @@ export function OwnerDashboard({ role }: { role: UserRole }) {
       <PageHeader
         title={pageTitle}
         breadcrumb={['Workspace', 'Dashboard']}
-        actions={
-          <select
-            value={propertyId}
-            onChange={(e) => setPropertyId(e.target.value)}
-            className="h-11 rounded-2xl border border-slate-200 bg-white px-4 text-sm font-medium shadow-sm outline-none ring-lime-700 focus:ring-2 dark:border-slate-800 dark:bg-slate-900"
-          >
-            <option value="">{isOwnerOrAdmin ? 'All properties' : 'Assigned properties'}</option>
-            {propertiesQuery.data?.map((p) => (
-              <option key={p._id} value={p._id}>{p.name}</option>
-            ))}
-          </select>
-        }
       />
 
       {/* ── Top KPI row — financial + occupancy ── */}

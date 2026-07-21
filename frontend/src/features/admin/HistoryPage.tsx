@@ -9,7 +9,7 @@ import { useState } from 'react';
 import { EmptyState } from '../../components/ui/EmptyState';
 import { PageHeader } from '../../components/ui/PageHeader';
 import { Skeleton } from '../../components/ui/Skeleton';
-import { getProperties } from '../dashboard/dashboardApi';
+import { useProperty } from '../../contexts/PropertyContext';
 import { listReservations } from '../operations/operationsApi';
 import { listOrders } from '../restaurant/restaurantApi';
 import { apiClient } from '../../services/apiClient';
@@ -182,13 +182,11 @@ const TODAY = new Date().toISOString().slice(0, 10);
 const WEEK_AGO = new Date(Date.now() - 7 * 86_400_000).toISOString().slice(0, 10);
 
 export function HistoryPage() {
-  const [propertyId, setPropertyId] = useState('');
+  const { activePropertyId: propertyId } = useProperty();
   const [from, setFrom]             = useState(WEEK_AGO);
   const [to, setTo]                 = useState(TODAY);
   const [search, setSearch]         = useState('');
   const [category, setCategory]     = useState<'all' | HistoryEvent['category']>('all');
-
-  const propertiesQuery = useQuery({ queryKey: ['properties'], queryFn: getProperties });
 
   const reservationsQuery = useQuery({
     queryKey: ['history-reservations', propertyId, from, to],
@@ -277,19 +275,7 @@ export function HistoryPage() {
           <Filter className="h-4 w-4 text-slate-400" />
           <span className="text-sm font-semibold text-slate-600 dark:text-slate-300">Filters</span>
         </div>
-        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
-          {/* Property */}
-          <select
-            value={propertyId}
-            onChange={(e) => setPropertyId(e.target.value)}
-            className={fieldCls}
-          >
-            <option value="">All properties</option>
-            {propertiesQuery.data?.map((p) => (
-              <option key={p._id} value={p._id}>{p.name}</option>
-            ))}
-          </select>
-
+        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
           {/* Date from */}
           <div className="relative">
             <CalendarDays className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />

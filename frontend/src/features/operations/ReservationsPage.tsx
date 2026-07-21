@@ -17,6 +17,7 @@ import { PageHeader } from '../../components/ui/PageHeader';
 import { Skeleton } from '../../components/ui/Skeleton';
 import { Toolbar } from '../../components/ui/Toolbar';
 import type { Guest, Reservation, Room } from '../../types/api';
+import { useProperty } from '../../contexts/PropertyContext';
 import { getProperties } from '../dashboard/dashboardApi';
 import {
   createReservation,
@@ -72,8 +73,9 @@ function StatusBadge({ status }: { status: Reservation['status'] }) {
 
 export function ReservationsPage() {
   const queryClient = useQueryClient();
+  const { activePropertyId } = useProperty();
   const [search, setSearch]         = useState('');
-  const [filterProp, setFilterProp] = useState('');
+  const [filterProp]                = [activePropertyId]; // driven by global selector
   const [filterStatus, setFilterStatus] = useState('');
   const [formOpen, setFormOpen]     = useState(false);
 
@@ -121,16 +123,6 @@ export function ReservationsPage() {
 
       {/* Toolbar */}
       <Toolbar search={search} onSearch={setSearch}>
-        <select
-          value={filterProp}
-          onChange={(e) => setFilterProp(e.target.value)}
-          className={selectCls}
-        >
-          <option value="">All properties</option>
-          {propertiesQuery.data?.map((p) => (
-            <option key={p._id} value={p._id}>{p.name}</option>
-          ))}
-        </select>
         <select
           value={filterStatus}
           onChange={(e) => setFilterStatus(e.target.value)}
@@ -235,8 +227,9 @@ function ReservationForm({
   onClose: () => void;
   onSubmit: (input: CreateReservationInput) => void;
 }) {
+  const { activePropertyId } = useProperty();
   const [propertyId, setPropertyId] = useState(
-    properties.length === 1 ? properties[0]._id : ''
+    activePropertyId || (properties.length === 1 ? properties[0]._id : '')
   );
   const [guestId,  setGuestId]  = useState('');
   const [guestSearch, setGuestSearch] = useState('');
