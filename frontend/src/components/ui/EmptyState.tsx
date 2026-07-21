@@ -1,7 +1,15 @@
-import { Inbox, Plus } from 'lucide-react';
+import { Inbox } from 'lucide-react';
 import { motion } from 'framer-motion';
 
-export function EmptyState({ title, message }: { title: string; message: string }) {
+export function EmptyState({
+  title,
+  message,
+  action
+}: {
+  title: string;
+  message: string;
+  action?: React.ReactNode;
+}) {
   return (
     <motion.div
       initial={{ opacity: 0, y: 8 }}
@@ -13,10 +21,7 @@ export function EmptyState({ title, message }: { title: string; message: string 
       </div>
       <h3 className="mt-5 text-lg font-semibold text-slate-950 dark:text-white">{title}</h3>
       <p className="mx-auto mt-2 max-w-md text-sm leading-6 text-slate-500 dark:text-slate-400">{message}</p>
-      <button className="mt-6 inline-flex items-center gap-2 rounded-2xl bg-lime-700 px-4 py-2.5 text-sm font-semibold text-white shadow-lg shadow-lime-700/20">
-        <Plus className="h-4 w-4" />
-        Create new
-      </button>
+      {action && <div className="mt-6">{action}</div>}
     </motion.div>
   );
 }

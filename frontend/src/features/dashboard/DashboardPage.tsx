@@ -9,10 +9,12 @@
  *   Owner | Admin              → OwnerDashboard   (full financials + portfolio)
  *   Property Manager           → OwnerDashboard   (full ops, no cross-property portfolio)
  *   Receptionist | Cashier     → ReceptionistDashboard (operational + cashier variant)
+ *   Housekeeper                → HousekeeperDashboard (room status board)
  *   Kitchen Staff              → KitchenDashboard (queue + stock)
  *   Department Staff           → KitchenDashboard (stock + requisitions only)
  */
 import { useAuth } from '../auth/AuthProvider';
+import { HousekeeperDashboard } from './HousekeeperDashboard';
 import { KitchenDashboard } from './KitchenDashboard';
 import { OwnerDashboard } from './OwnerDashboard';
 import { ReceptionistDashboard } from './ReceptionistDashboard';
@@ -30,6 +32,9 @@ export function DashboardPage() {
     case 'Receptionist':
     case 'Cashier':
       return <ReceptionistDashboard role={role} />;
+
+    case 'Housekeeper':
+      return <HousekeeperDashboard />;
 
     case 'Kitchen Staff':
     case 'Department Staff':

@@ -116,24 +116,14 @@ export function ReceptionistDashboard({ role }: { role: UserRole }) {
           icon={Users}
           tone="lime"
         />
-        {/* Cashiers additionally see folio & payment info */}
-        {isCashier ? (
-          <MetricCard
-            title="Outstanding Folios"
-            value={money.format(s.outstandingFolios ?? 0)}
-            helper="Open folios pending settlement"
-            icon={CreditCard}
-            tone="red"
-          />
-        ) : (
-          <MetricCard
-            title="Occupancy Rate"
-            value={`${s.occupancyRate ?? 0}%`}
-            helper="Current room occupancy"
-            icon={BedDouble}
-            tone="slate"
-          />
-        )}
+        {/* Both Cashiers and Receptionists see outstanding folio balance */}
+        <MetricCard
+          title="Outstanding Folios"
+          value={money.format(s.outstandingFolios ?? 0)}
+          helper="Open folios pending settlement"
+          icon={CreditCard}
+          tone="red"
+        />
       </section>
 
       {/* ── Quick actions tailored to role ── */}
@@ -145,14 +135,15 @@ export function ReceptionistDashboard({ role }: { role: UserRole }) {
               ? [
                   { label: 'Settle folio',      href: '/folios' },
                   { label: 'View reservations', href: '/reservations' },
-                  { label: 'Guest check-in',    href: '/check-in' },
-                  { label: 'Guest check-out',   href: '/check-out' },
+                  { label: 'Guest directory',   href: '/guests' },
+                  { label: 'Payment reports',   href: '/reports' },
                 ]
               : [
                   { label: 'New reservation',  href: '/reservations' },
                   { label: 'Check in guest',   href: '/check-in' },
                   { label: 'Check out guest',  href: '/check-out' },
                   { label: 'Guest directory',  href: '/guests' },
+                  { label: 'View folios',      href: '/folios' },
                 ]
             ).map(({ label, href }) => (
               <Link

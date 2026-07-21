@@ -19,6 +19,7 @@ import {
   ChefHat,
   UserCog,
   Users,
+  WashingMachine,
   X
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -104,10 +105,11 @@ const ALL_NAV_GROUPS: NavGroup[] = [
         roles: ['Owner', 'Admin', 'Property Manager', 'Kitchen Staff']
       },
       {
+        // Folios are accessible to Owner, Admin, Property Manager, Receptionist, and Cashier
         label: 'Folios',
         href: '/folios',
         icon: CreditCard,
-        roles: ['Owner', 'Admin', 'Property Manager', 'Cashier']
+        roles: ['Owner', 'Admin', 'Property Manager', 'Receptionist', 'Cashier']
       },
       {
         label: 'Inventory',
@@ -120,6 +122,17 @@ const ALL_NAV_GROUPS: NavGroup[] = [
         href: '/requisitions',
         icon: BarChart3,
         roles: ['Owner', 'Admin', 'Property Manager', 'Kitchen Staff', 'Department Staff']
+      }
+    ]
+  },
+  {
+    label: 'Housekeeping',
+    items: [
+      {
+        label: 'Room Status',
+        href: '/housekeeping',
+        icon: WashingMachine,
+        roles: ['Owner', 'Admin', 'Property Manager', 'Housekeeper']
       }
     ]
   },
@@ -148,7 +161,7 @@ const ALL_NAV_GROUPS: NavGroup[] = [
         label: 'Reports',
         href: '/reports',
         icon: FileBarChart,
-        roles: ['Owner', 'Admin', 'Property Manager']
+        roles: ['Owner', 'Admin', 'Property Manager', 'Cashier']
       },
       {
         label: 'History',

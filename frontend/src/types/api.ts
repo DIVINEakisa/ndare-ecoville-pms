@@ -16,6 +16,7 @@ export type UserRole =
   | 'Property Manager'
   | 'Receptionist'
   | 'Cashier'
+  | 'Housekeeper'
   | 'Kitchen Staff'
   | 'Department Staff';
 
