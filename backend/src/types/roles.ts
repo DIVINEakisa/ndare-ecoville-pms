@@ -44,7 +44,7 @@ export const rolePermissions: Record<UserRole, string[]> = {
   ],
   Cashier: ['dashboard:read', 'folios:read', 'payments:create', 'reports:payments'],
   'Kitchen Staff': ['dashboard:read', 'orders:manage', 'menu:read', 'inventory:read', 'requisitions:create'],
-  Housekeeper: ['dashboard:read', 'rooms:read', 'housekeeping:manage', 'inventory:read', 'requisitions:create'],
+  Housekeeper: ['dashboard:read', 'rooms:read', 'rooms:manage', 'housekeeping:manage', 'inventory:read', 'requisitions:create'],
   'Department Staff': ['dashboard:read', 'requisitions:create', 'inventory:read']
 };
 

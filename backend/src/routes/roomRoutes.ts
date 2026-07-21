@@ -14,4 +14,6 @@ roomRoutes.use(authenticate, attachPropertyScope);
 roomRoutes.get('/', authorizePermission('rooms:read'), validate(listRoomsSchema), asyncHandler(listRoomsController));
 roomRoutes.get('/availability', authorizePermission('reservations:manage'), validate(availabilitySchema), asyncHandler(availabilityController));
 roomRoutes.post('/', authorizePermission('rooms:manage'), validate(createRoomSchema), asyncHandler(createRoomController));
+// rooms:manage is granted to Owner, Admin, Property Manager, AND Housekeeper.
+// The service layer restricts Housekeepers to status-only changes.
 roomRoutes.patch('/:id', authorizePermission('rooms:manage'), validate(updateRoomSchema), asyncHandler(updateRoomController));

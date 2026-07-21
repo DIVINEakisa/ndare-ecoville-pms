@@ -47,7 +47,14 @@ export async function updateRoom(req: Request) {
   const room = await Room.findOne({ ...propertyFilter(req), _id: req.params.id, deletedAt: null });
   if (!room) throw new AppError(404, 'Room not found', 'ROOM_NOT_FOUND');
 
-  Object.assign(room, req.body, { updatedBy: req.user?.id });
+  // Housekeepers can only change status — prevent accidental overwrite of
+  // room configuration fields (rate, type, capacity, etc.)
+  const isHousekeeper = req.user?.role === 'Housekeeper';
+  const allowedFields = isHousekeeper
+    ? { status: req.body.status }
+    : req.body;
+
+  Object.assign(room, allowedFields, { updatedBy: req.user?.id });
   await room.save();
   return room;
 }

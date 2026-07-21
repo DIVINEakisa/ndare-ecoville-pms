@@ -63,7 +63,7 @@ export function LandingPage() {
             to="/login"
             className="rounded-2xl bg-slate-950 px-3.5 py-2 text-sm font-semibold text-white shadow-lg shadow-slate-900/15 transition-all hover:-translate-y-0.5 hover:bg-slate-800 sm:px-4 sm:py-2.5"
           >
-            Client Sign In
+            Sign In
           </Link>
         </nav>
       </header>
