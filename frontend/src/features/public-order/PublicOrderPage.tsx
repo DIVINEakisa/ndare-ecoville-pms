@@ -44,8 +44,35 @@ export function PublicOrderPage() {
   const { propertyId = "" } = useParams<{ propertyId: string }>();
   const [searchParams] = useSearchParams();
 
-  const rawType = searchParams.get("type") ?? "room";
-  const rawNumber = searchParams.get("number") ?? "";
+  // Support both the original ?type=room&number=101 format AND the new batch
+  // QR format: ?venue=Main+Restaurant&table=5  or  ?room=101
+  // New params take precedence; legacy params are kept as fallback.
+  const venueParam  = searchParams.get("venue")  ?? "";
+  const tableParam  = searchParams.get("table")  ?? "";
+  const roomParam   = searchParams.get("room")   ?? "";
+  const legacyType  = searchParams.get("type")   ?? "";
+  const legacyNum   = searchParams.get("number") ?? "";
+
+  // Resolve type + number from whichever format was used
+  const rawType: string = tableParam ? "table" : roomParam ? "room" : legacyType || "room";
+  const rawNumber: string = tableParam || roomParam || legacyNum;
+
+  // Persist venue/table/room context to sessionStorage so it survives refreshes
+  useEffect(() => {
+    if (!propertyId) return;
+    const ctx: Record<string, string> = {};
+    if (venueParam)  ctx.venue  = venueParam;
+    if (tableParam)  ctx.table  = tableParam;
+    if (roomParam)   ctx.room   = roomParam;
+    if (Object.keys(ctx).length > 0) {
+      try {
+        sessionStorage.setItem(
+          `pms.qr.context.${propertyId}`,
+          JSON.stringify({ ...ctx, savedAt: Date.now() })
+        );
+      } catch { /* storage quota exceeded */ }
+    }
+  }, [propertyId, venueParam, tableParam, roomParam]);
 
   // Single hook manages all persistence — replaces all the scattered useState calls
   const session = useGuestSession(propertyId, rawType, rawNumber);
@@ -200,6 +227,7 @@ export function PublicOrderPage() {
                 propertyName={propertyName}
                 urlType={hasUrlLocation ? urlType : undefined}
                 urlNumber={hasUrlLocation ? urlNumber : undefined}
+                urlVenue={venueParam || undefined}
                 savedOrder={
                   placedOrder &&
                   placedOrder.status !== "Delivered" &&
@@ -261,6 +289,7 @@ function CheckInStep({
   propertyName,
   urlType,
   urlNumber,
+  urlVenue,
   savedOrder,
   onConfirm,
   onViewSavedOrder,
@@ -269,6 +298,7 @@ function CheckInStep({
   propertyName?: string;
   urlType?: "room" | "table";
   urlNumber?: string;
+  urlVenue?: string;
   savedOrder: PlacedOrder | null;
   onConfirm: (info: GuestInfo) => void;
   onViewSavedOrder: () => void;
@@ -351,11 +381,18 @@ function CheckInStep({
               Welcome to {propertyName ?? "Ndare Ecoville"}!
             </h1>
             {/* Show exactly where the order will be delivered, derived from the URL */}
-            <div className="mt-3 inline-flex items-center gap-2 rounded-2xl border border-lime-800/60 bg-lime-900/20 px-4 py-2">
-              <MapPin className="h-4 w-4 text-lime-500" />
-              <span className="text-sm font-semibold capitalize text-lime-300">
-                Ordering directly to {locationType} {locationNumber}
-              </span>
+            <div className="mt-3 inline-flex flex-col items-center gap-1.5 rounded-2xl border border-lime-800/60 bg-lime-900/20 px-4 py-3">
+              {urlVenue && (
+                <span className="text-xs font-semibold uppercase tracking-wider text-lime-500">
+                  {urlVenue}
+                </span>
+              )}
+              <div className="flex items-center gap-2">
+                <MapPin className="h-4 w-4 text-lime-500" />
+                <span className="text-sm font-semibold capitalize text-lime-300">
+                  {locationType === "table" ? "Table" : "Room"} {locationNumber}
+                </span>
+              </div>
             </div>
             <p className="mt-3 text-slate-400">
               Just tell us your name and we'll bring your order right to you.
