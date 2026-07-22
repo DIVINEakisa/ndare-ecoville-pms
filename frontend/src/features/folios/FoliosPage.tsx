@@ -63,10 +63,10 @@ export function FoliosPage() {
           className="rounded-2xl border border-slate-200 bg-white px-3 py-2 text-sm dark:border-slate-800 dark:bg-slate-950"
         >
           <option value="">All statuses</option>
-          <option>Open</option>
-          <option>Partially Paid</option>
-          <option>Settled</option>
-          <option>Void</option>
+          <option value="Open">Open</option>
+          <option value="Partially Paid">Partially Paid</option>
+          <option value="Settled">Settled</option>
+          <option value="Void">Void</option>
         </select>
       </Toolbar>
 
