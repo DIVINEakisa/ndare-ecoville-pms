@@ -22,7 +22,7 @@ export function RequisitionsPage() {
   const inventory = useQuery({ queryKey: ['requisition-inventory', propertyId], queryFn: () => listInventory({ propertyId: propertyId || undefined, limit: 100 }) });
   const requisitions = useQuery({
     queryKey: ['requisitions', search, propertyId, status],
-    queryFn: () => listRequisitions({ search, propertyId: propertyId || undefined, status, limit: 50 })
+    queryFn: () => listRequisitions({ search, propertyId: propertyId || undefined, status: status || undefined, limit: 50 })
   });
   const createMutation = useMutation({
     mutationFn: createRequisition,
