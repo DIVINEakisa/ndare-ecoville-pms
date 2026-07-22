@@ -43,14 +43,15 @@ async function seedAllSystemData() {
   await connectDatabase();
   console.log('\n✔  Connected to MongoDB');
 
-  // ── 0. Resolve target property ───────────────────────────────────────────
-  const property = await Property.findOne({ code: 'NDARE' }).lean();
-  if (!property) {
-    console.error('✘  Property NDARE not found. Run `npm run seed` first.');
+  const properties = await Property.find({ deletedAt: null }).lean();
+  if (!properties.length) {
+    console.error('✘  No properties found. Run `npm run seed` first.');
     process.exit(1);
   }
-  const pid = property._id as mongoose.Types.ObjectId;
-  console.log(`✔  Target property: "${property.name}" (${pid})\n`);
+
+  for (const property of properties) {
+    const pid = property._id as mongoose.Types.ObjectId;
+    console.log(`\n✔  Target property: "${property.name}" (${pid})\n`);
 
   // ─────────────────────────────────────────────────────────────────────────
   // 1. ROOMS
@@ -246,6 +247,8 @@ async function seedAllSystemData() {
     await RestaurantOrder.create({ propertyId: pid, deletedAt: null, ...def });
     console.log(`   ✔  ${def.orderNumber} → ${def.status}`);
     console.log(`      ${def.items.map((i) => `${i.quantity}× ${i.name}`).join(', ')} · ${def.totalAmount.toLocaleString()} RWF`);
+  }
+
   }
 
   // ─────────────────────────────────────────────────────────────────────────

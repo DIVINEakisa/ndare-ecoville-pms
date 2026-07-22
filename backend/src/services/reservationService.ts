@@ -46,14 +46,17 @@ export async function assertNoDoubleBooking(input: {
 
 export async function listReservations(req: Request) {
   const { page, limit, skip } = getPagination(req);
-  const search = typeof req.query.search === 'string' ? req.query.search : '';
-  const status = typeof req.query.status === 'string' ? req.query.status : '';
+  const search = typeof req.query.search === 'string' ? req.query.search.trim() : '';
+  const rawStatus = typeof req.query.status === 'string' ? req.query.status.trim() : '';
   const from = req.query.from ? new Date(String(req.query.from)) : undefined;
   const to = req.query.to ? new Date(String(req.query.to)) : undefined;
+
+  const isAllStatus = !rawStatus || rawStatus.toLowerCase() === 'all' || rawStatus.toLowerCase() === 'all statuses';
+
   const filter = {
     ...propertyFilter(req),
     deletedAt: null,
-    ...(status ? { status } : {}),
+    ...(!isAllStatus ? { status: rawStatus } : {}),
     ...(from && to ? { checkIn: { $lt: to }, checkOut: { $gt: from } } : {}),
     ...(search ? { notes: { $regex: search, $options: 'i' } } : {})
   };

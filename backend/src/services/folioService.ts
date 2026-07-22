@@ -8,12 +8,15 @@ import { getPagination, paginationMeta } from '../utils/pagination.js';
 
 export async function listFolios(req: Request) {
   const { page, limit, skip } = getPagination(req);
-  const status = typeof req.query.status === 'string' ? req.query.status : '';
-  const search = typeof req.query.search === 'string' ? req.query.search : '';
+  const rawStatus = typeof req.query.status === 'string' ? req.query.status.trim() : '';
+  const search = typeof req.query.search === 'string' ? req.query.search.trim() : '';
+
+  const isAllStatus = !rawStatus || rawStatus.toLowerCase() === 'all' || rawStatus.toLowerCase() === 'all statuses';
+
   const filter = {
     ...propertyFilter(req),
     deletedAt: null,
-    ...(status ? { status } : {})
+    ...(!isAllStatus ? { status: rawStatus } : {})
   };
 
   const [folios, total] = await Promise.all([
