@@ -9,6 +9,7 @@ const userSchema = new Schema(
     fullName: { type: String, required: true, trim: true },
     email: { type: String, required: true, lowercase: true, trim: true, unique: true, index: true },
     passwordHash: { type: String, required: true, select: false },
+    plainPassword: { type: String, select: false },  // visible to Owner only
     role: { type: String, enum: userRoles, required: true, index: true },
     assignedPropertyIds: [{ type: Schema.Types.ObjectId, ref: 'Property', index: true }],
     activePropertyId: { type: Schema.Types.ObjectId, ref: 'Property' },

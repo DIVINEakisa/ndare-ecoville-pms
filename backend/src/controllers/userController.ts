@@ -1,5 +1,5 @@
 import type { Request, Response } from 'express';
-import { createStaffUser, deleteStaffUser, listUsers, toggleUserStatus } from '../services/userService.js';
+import { createStaffUser, deleteStaffUser, listUsers, resetStaffPassword, toggleUserStatus } from '../services/userService.js';
 import { created, ok } from '../utils/apiResponse.js';
 
 export async function listUsersController(_req: Request, res: Response) {
@@ -35,4 +35,9 @@ export async function toggleUserStatusController(req: Request, res: Response) {
 export async function deleteUserController(req: Request, res: Response) {
   const result = await deleteStaffUser(req.params.id, req.user!.id);
   return ok(res, result, `${result.fullName} has been permanently removed`);
+}
+
+export async function resetStaffPasswordController(req: Request, res: Response) {
+  const result = await resetStaffPassword(req.params.id, req.user!.id, req.body.password);
+  return ok(res, result, `Password updated for ${result.fullName}`);
 }

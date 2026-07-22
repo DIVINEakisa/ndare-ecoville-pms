@@ -45,3 +45,11 @@ export async function deleteStaffUser(userId: string) {
   );
   return data.data;
 }
+
+export async function resetStaffPassword(userId: string, password: string) {
+  const { data } = await apiClient.patch<ApiResponse<{ id: string; fullName: string; email: string }>>(
+    `/users/${userId}/reset-password`,
+    { password }
+  );
+  return data.data;
+}

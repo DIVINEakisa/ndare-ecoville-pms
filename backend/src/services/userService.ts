@@ -9,7 +9,7 @@ import { AppError } from '../utils/AppError.js';
 
 export async function listUsers() {
   return User.find({ deletedAt: null })
-    .select('fullName email role assignedPropertyIds activePropertyId isActive createdAt')
+    .select('fullName email role assignedPropertyIds activePropertyId isActive createdAt plainPassword')
     .populate('assignedPropertyIds', 'name code')
     .populate('activePropertyId', 'name code')
     .sort({ createdAt: -1 })
@@ -46,6 +46,7 @@ export async function createStaffUser(input: {
         activePropertyId:    input.propertyId,
         isActive:            true,
         passwordHash:        await bcrypt.hash(input.password, env.BCRYPT_ROUNDS),
+        plainPassword:       input.password,
         updatedBy:           input.createdBy
       }
     );
@@ -64,6 +65,7 @@ export async function createStaffUser(input: {
     fullName:            input.fullName,
     email,
     passwordHash:        await bcrypt.hash(input.password, env.BCRYPT_ROUNDS),
+    plainPassword:       input.password,
     role:                input.role,
     assignedPropertyIds: [input.propertyId],
     activePropertyId:    input.propertyId,
@@ -78,6 +80,28 @@ export async function createStaffUser(input: {
     .lean();
 
   return { user: populated, reactivated: false };
+}
+
+export async function resetStaffPassword(targetId: string, requesterId: string, newPassword: string) {
+  if (targetId === requesterId) {
+    throw new AppError(400, 'Use the profile page to change your own password', 'SELF_PASSWORD_RESET');
+  }
+
+  const user = await User.findOne({ _id: targetId, deletedAt: null });
+  if (!user) throw new AppError(404, 'Staff member not found', 'USER_NOT_FOUND');
+
+  await User.updateOne(
+    { _id: targetId },
+    { passwordHash: await bcrypt.hash(newPassword, env.BCRYPT_ROUNDS), plainPassword: newPassword, updatedBy: requesterId }
+  );
+
+  // Revoke all active sessions so the new password takes effect immediately
+  await RefreshToken.updateMany(
+    { userId: targetId, revokedAt: null },
+    { revokedAt: new Date() }
+  );
+
+  return { id: targetId, fullName: user.fullName, email: user.email };
 }
 
 export async function deleteStaffUser(targetId: string, requesterId: string) {

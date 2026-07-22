@@ -13,7 +13,12 @@ export const createUserSchema = z.object({
 });
 
 export const userIdSchema = z.object({
-  params: z.object({
-    id: objectId
+  params: z.object({ id: objectId })
+});
+
+export const resetPasswordSchema = z.object({
+  params: z.object({ id: objectId }),
+  body: z.object({
+    password: z.string().min(8, 'Password must be at least 8 characters')
   })
 });

@@ -10,7 +10,8 @@
  *   • Print All (PDF)  — browser print with @media print grid layout
  *   • Download ZIP     — all QRs rendered to canvas, packed into a ZIP
  */
-import { AnimatePresence, motion } from 'framer-motion';import JSZip from 'jszip';
+import { AnimatePresence, motion } from 'framer-motion';
+import JSZip from 'jszip';
 import {
   BedDouble,
   Download,

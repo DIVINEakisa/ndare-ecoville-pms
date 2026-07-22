@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { AnimatePresence, motion } from 'framer-motion';
-import { AlertTriangle, Eye, EyeOff, Loader2, Plus, Trash2, UserCheck, UserRound, UserX, X } from 'lucide-react';
+import { AlertTriangle, Eye, EyeOff, KeyRound, Loader2, Plus, Trash2, UserCheck, UserRound, UserX, X } from 'lucide-react';
 import { useState } from 'react';
 import toast from 'react-hot-toast';
 import { PageHeader } from '../../components/ui/PageHeader';
@@ -12,6 +12,7 @@ import {
   createStaffUser,
   deleteStaffUser,
   listStaffUsers,
+  resetStaffPassword,
   toggleStaffStatus,
   type CreateStaffUserInput
 } from './usersApi';
@@ -36,6 +37,7 @@ export function UsersPage() {
   const [createModalOpen, setCreateModalOpen] = useState(false);
   const [toggleTarget, setToggleTarget]       = useState<StaffUser | null>(null);
   const [deleteTarget, setDeleteTarget]       = useState<StaffUser | null>(null);
+  const [resetTarget, setResetTarget]         = useState<StaffUser | null>(null);
 
   const usersQuery      = useQuery({ queryKey: ['staff-users'], queryFn: listStaffUsers });
   const propertiesQuery = useQuery({ queryKey: ['properties'],  queryFn: getProperties });
@@ -92,6 +94,20 @@ export function UsersPage() {
       );
     },
     onError: () => toast.error('Could not remove staff member. Please try again.')
+  });
+
+  const resetPasswordMutation = useMutation({
+    mutationFn: ({ userId, password }: { userId: string; password: string }) =>
+      resetStaffPassword(userId, password),
+    onSuccess: (result) => {
+      toast.success(`Password updated for ${result.fullName}.`);
+      setResetTarget(null);
+    },
+    onError: (err: unknown) => {
+      type E = { response?: { data?: { message?: string } } };
+      const msg = (err as E)?.response?.data?.message ?? 'Could not update password';
+      toast.error(msg);
+    }
   });
 
   return (
@@ -191,6 +207,14 @@ export function UsersPage() {
                     <td className="px-6 py-4 text-right">
                       {!isSelf && (
                         <div className="flex items-center justify-end gap-2">
+                          <button
+                            onClick={() => setResetTarget(staffUser)}
+                            title="Set new password"
+                            className="inline-flex items-center gap-1.5 rounded-xl border border-slate-200 bg-slate-50 px-3 py-1.5 text-xs font-semibold text-slate-600 transition-colors hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700"
+                          >
+                            <KeyRound className="h-3.5 w-3.5" />
+                            Password
+                          </button>
                           <ToggleButton
                             isActive={staffUser.isActive}
                             onClick={() => setToggleTarget(staffUser)}
@@ -246,6 +270,18 @@ export function UsersPage() {
             isSubmitting={deleteMutation.isPending}
             onClose={() => setDeleteTarget(null)}
             onConfirm={() => deleteMutation.mutate(deleteTarget._id)}
+          />
+        )}
+      </AnimatePresence>
+
+      {/* ── Reset password modal ── */}
+      <AnimatePresence>
+        {resetTarget && (
+          <ResetPasswordModal
+            staffUser={resetTarget}
+            isSubmitting={resetPasswordMutation.isPending}
+            onClose={() => setResetTarget(null)}
+            onConfirm={(password) => resetPasswordMutation.mutate({ userId: resetTarget._id, password })}
           />
         )}
       </AnimatePresence>
@@ -663,6 +699,108 @@ function CreateStaffModal({
           </button>
         </div>
       </motion.form>
+    </div>
+  );
+}
+
+// ─── Reset password modal ──────────────────────────────────────────────────
+
+function ResetPasswordModal({
+  staffUser,
+  isSubmitting,
+  onClose,
+  onConfirm,
+}: {
+  staffUser: StaffUser;
+  isSubmitting: boolean;
+  onClose: () => void;
+  onConfirm: (password: string) => void;
+}) {
+  const [password, setPassword] = useState('');
+  const [visible, setVisible]   = useState(false);
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/60 p-4 backdrop-blur-sm">
+      <motion.div
+        initial={{ opacity: 0, y: 16, scale: 0.97 }}
+        animate={{ opacity: 1, y: 0, scale: 1 }}
+        exit={{ opacity: 0, y: 8, scale: 0.97 }}
+        transition={{ duration: 0.2 }}
+        className="w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl dark:bg-slate-900"
+      >
+        <div className="flex items-start justify-between gap-4">
+          <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-slate-100 dark:bg-slate-800">
+            <KeyRound className="h-6 w-6 text-slate-600 dark:text-slate-300" />
+          </div>
+          <button
+            onClick={onClose}
+            className="rounded-xl p-2 text-slate-400 transition-colors hover:bg-slate-100 dark:hover:bg-slate-800"
+          >
+            <X className="h-5 w-5" />
+          </button>
+        </div>
+
+        <div className="mt-4">
+          <h2 className="text-lg font-semibold text-slate-950 dark:text-white">
+            Set new password
+          </h2>
+          <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
+            Set a new password for{' '}
+            <span className="font-semibold text-slate-800 dark:text-white">
+              {staffUser.fullName}
+            </span>.
+            Their current session will be signed out immediately.
+          </p>
+        </div>
+
+        {/* New password input with show/hide */}
+        <div className="mt-5">
+          <label className="mb-1.5 block text-sm font-semibold text-slate-700 dark:text-slate-300">
+            New Password
+          </label>
+          <div className="relative">
+            <input
+              type={visible ? 'text' : 'password'}
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              placeholder="Minimum 8 characters"
+              minLength={8}
+              className="h-12 w-full rounded-2xl border border-slate-200 px-4 pr-12 text-sm outline-none ring-lime-700 transition-colors focus:ring-2 dark:border-slate-700 dark:bg-slate-950 dark:text-white"
+            />
+            <button
+              type="button"
+              onClick={() => setVisible((v) => !v)}
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-700 dark:hover:text-slate-200"
+            >
+              {visible ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+            </button>
+          </div>
+          {password.length > 0 && password.length < 8 && (
+            <p className="mt-1.5 text-xs text-red-500">Must be at least 8 characters</p>
+          )}
+        </div>
+
+        <div className="mt-6 flex justify-end gap-3">
+          <button
+            type="button"
+            onClick={onClose}
+            disabled={isSubmitting}
+            className="rounded-2xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 transition-colors hover:bg-slate-50 disabled:opacity-60 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-200"
+          >
+            Cancel
+          </button>
+          <button
+            type="button"
+            disabled={isSubmitting || password.length < 8}
+            onClick={() => onConfirm(password)}
+            className="inline-flex items-center gap-2 rounded-2xl bg-lime-700 px-4 py-2.5 text-sm font-semibold text-white shadow-lg shadow-lime-700/20 transition-colors hover:bg-lime-800 disabled:opacity-60"
+          >
+            {isSubmitting
+              ? <><Loader2 className="h-4 w-4 animate-spin" />Saving…</>
+              : <><KeyRound className="h-4 w-4" />Save Password</>}
+          </button>
+        </div>
+      </motion.div>
     </div>
   );
 }
