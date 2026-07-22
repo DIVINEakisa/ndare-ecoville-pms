@@ -123,7 +123,7 @@ const ALL_NAV_GROUPS: NavGroup[] = [
         label: 'Inventory',
         href: '/inventory',
         icon: Package,
-        roles: ['Owner', 'Admin', 'Property Manager', 'Kitchen Staff', 'Department Staff']
+        roles: ['Owner', 'Admin', 'Property Manager', 'Kitchen Staff']
       },
       {
         label: 'Requisitions',

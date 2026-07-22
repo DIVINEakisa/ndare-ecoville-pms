@@ -26,7 +26,18 @@ async function nextRequestNumber(propertyId: string) {
 export async function listRequisitions(req: Request) {
   const { page, limit, skip } = getPagination(req);
   const status = typeof req.query.status === 'string' ? req.query.status : '';
-  const filter = { ...propertyFilter(req), deletedAt: null, ...(status ? { status } : {}) };
+
+  // Department Staff can only see their own requisitions — not the whole property's list
+  const userFilter = req.user?.role === 'Department Staff'
+    ? { requestedBy: new Types.ObjectId(req.user.id) }
+    : {};
+
+  const filter = {
+    ...propertyFilter(req),
+    ...userFilter,
+    deletedAt: null,
+    ...(status ? { status } : {})
+  };
   const [items, total] = await Promise.all([
     Requisition.find(filter).populate('requestedBy', 'fullName role').sort({ createdAt: -1 }).skip(skip).limit(limit).lean(),
     Requisition.countDocuments(filter)

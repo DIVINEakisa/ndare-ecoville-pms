@@ -21,7 +21,7 @@ export function InventoryPage() {
   const properties = useQuery({ queryKey: ['properties'], queryFn: getProperties });
   const inventory = useQuery({
     queryKey: ['inventory', search, propertyId, category, lowStock],
-    queryFn: () => listInventory({ search, propertyId: propertyId || undefined, category, lowStock, limit: 50 })
+    queryFn: () => listInventory({ search, propertyId: propertyId || undefined, category: category || undefined, lowStock: lowStock || undefined, limit: 50 })
   });
   const createMutation = useMutation({
     mutationFn: createInventoryItem,

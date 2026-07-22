@@ -3,7 +3,12 @@ import { objectId, paginationQuery } from './commonValidators.js';
 
 export const listInventorySchema = z.object({
   query: paginationQuery.extend({
-    category: z.enum(['Kitchen', 'Room Supplies', 'Cleaning', 'Utilities']).optional(),
+    // Accept empty string from the frontend "All categories" option and treat it as omitted
+    category: z
+      .string()
+      .optional()
+      .transform((val) => (val === '' || !val ? undefined : val))
+      .pipe(z.enum(['Kitchen', 'Room Supplies', 'Cleaning', 'Utilities']).optional()),
     lowStock: z.coerce.boolean().optional()
   })
 });

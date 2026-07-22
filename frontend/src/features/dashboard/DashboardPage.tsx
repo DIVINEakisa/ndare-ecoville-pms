@@ -11,10 +11,11 @@
  *   Receptionist               → ReceptionistDashboard (arrivals, departures, room status)
  *   Cashier                    → CashierDashboard (outstanding folios, payments, reports)
  *   Housekeeper                → HousekeeperDashboard (room status board) *   Kitchen Staff              → KitchenDashboard (queue + stock)
- *   Department Staff           → KitchenDashboard (stock + requisitions only)
+ *   Department Staff           → DepartmentStaffDashboard (requisitions only)
  */
 import { useAuth } from '../auth/AuthProvider';
 import { CashierDashboard } from './CashierDashboard';
+import { DepartmentStaffDashboard } from './DepartmentStaffDashboard';
 import { HousekeeperDashboard } from './HousekeeperDashboard';
 import { KitchenDashboard } from './KitchenDashboard';
 import { OwnerDashboard } from './OwnerDashboard';
@@ -40,8 +41,10 @@ export function DashboardPage() {
       return <HousekeeperDashboard />;
 
     case 'Kitchen Staff':
-    case 'Department Staff':
       return <KitchenDashboard role={role} />;
+
+    case 'Department Staff':
+      return <DepartmentStaffDashboard />;
 
     default:
       // Fallback for unknown/null role — show the most restricted view

@@ -3,7 +3,12 @@ import { objectId, paginationQuery } from './commonValidators.js';
 
 export const listRequisitionsSchema = z.object({
   query: paginationQuery.extend({
-    status: z.enum(['Pending', 'Approved', 'Rejected', 'Received']).optional()
+    // Accept empty string from "All statuses" dropdown and treat it as omitted
+    status: z
+      .string()
+      .optional()
+      .transform((val) => (val === '' || !val ? undefined : val))
+      .pipe(z.enum(['Pending', 'Approved', 'Rejected', 'Received']).optional())
   })
 });
 

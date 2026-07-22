@@ -7,6 +7,7 @@ import { LoginPage } from '../features/auth/LoginPage';
 import { PlaceholderPage } from '../features/shared/PlaceholderPage';
 import { ProtectedRoute } from './ProtectedRoute';
 import { OwnerRoute } from './OwnerRoute';
+import { useAuth } from '../features/auth/AuthProvider';
 
 const DashboardPage = lazy(() =>
   import('../features/dashboard/DashboardPage').then((module) => ({ default: module.DashboardPage }))
@@ -42,6 +43,9 @@ const InventoryPage = lazy(() =>
 );
 const RequisitionsPage = lazy(() =>
   import('../features/supply/RequisitionsPage').then((module) => ({ default: module.RequisitionsPage }))
+);
+const DepartmentRequisitionsPage = lazy(() =>
+  import('../features/supply/DepartmentRequisitionsPage').then((module) => ({ default: module.DepartmentRequisitionsPage }))
 );
 const NotificationsPage = lazy(() =>
   import('../features/supply/NotificationsPage').then((module) => ({ default: module.NotificationsPage }))
@@ -87,6 +91,19 @@ function RouteFallback() {
   );
 }
 
+/**
+ * Routes /requisitions to the appropriate page based on role.
+ * Department Staff get a focused submit+track view.
+ * All other roles get the full management page.
+ */
+function RequisitionsPageRouter() {
+  const { user } = useAuth();
+  if (user?.role === 'Department Staff') {
+    return <DepartmentRequisitionsPage />;
+  }
+  return <RequisitionsPage />;
+}
+
 export function AppRouter() {
   return (
     <BrowserRouter>
@@ -114,7 +131,7 @@ export function AppRouter() {
               <Route path="/housekeeping" element={<HousekeepingPage />} />
               <Route path="/folios" element={<FoliosPage />} />
               <Route path="/inventory" element={<InventoryPage />} />
-              <Route path="/requisitions" element={<RequisitionsPage />} />
+              <Route path="/requisitions" element={<RequisitionsPageRouter />} />
               <Route path="/notifications" element={<NotificationsPage />} />
               <Route path="/reports" element={<ReportsPage />} />
               <Route path="/history" element={<HistoryPage />} />
