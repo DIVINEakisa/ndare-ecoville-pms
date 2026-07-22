@@ -14,13 +14,19 @@ import { MetricCard } from '../../components/ui/MetricCard';
 import { PageHeader } from '../../components/ui/PageHeader';
 import { Skeleton } from '../../components/ui/Skeleton';
 import { useAuth } from '../auth/AuthProvider';
+import { useProperty } from '../../contexts/PropertyContext';
 import { listRoomsForHousekeeping } from '../housekeeping/housekeepingApi';
 
 export function HousekeeperDashboard() {
   const { user } = useAuth();
+  const { activePropertyId: contextPropertyId } = useProperty();
 
+  // Prefer the global property selector (PropertyContext / sessionStorage) so
+  // the dashboard respects the same property the user has selected in the nav.
+  // Fall back to the value stored on the user record if the selector is empty.
   const propertyId =
-    user?.activePropertyId ??
+    contextPropertyId ||
+    user?.activePropertyId ||
     (user?.assignedPropertyIds?.[0] as string | undefined);
 
   const roomsQuery = useQuery({

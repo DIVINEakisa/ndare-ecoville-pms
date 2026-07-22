@@ -24,6 +24,7 @@ import { Skeleton } from '../../components/ui/Skeleton';
 import { useAuth } from '../auth/AuthProvider';
 import type { Room } from '../../types/api';
 import { listRoomsForHousekeeping, updateRoomStatus } from './housekeepingApi';
+import { useProperty } from '../../contexts/PropertyContext';
 
 // ─── Status helpers ────────────────────────────────────────────────────────
 
@@ -43,14 +44,16 @@ const ALLOWED_TARGET_STATUSES: Room['status'][] = ['Available', 'Maintenance'];
 export function HousekeepingPage() {
   const queryClient = useQueryClient();
   const { user } = useAuth();
+  const { activePropertyId: contextPropertyId } = useProperty();
   const [statusFilter, setStatusFilter] = useState<string>('');
   const [modalRoom, setModalRoom] = useState<Room | null>(null);
 
-  // Always pass the user's active property so the backend scope filter resolves correctly.
-  // If the user has no activePropertyId (shouldn't happen after seed), fall back to the
-  // first assigned property.
+  // Prefer the global property selector (PropertyContext / sessionStorage) so
+  // the page respects the same property the user has selected in the nav.
+  // Fall back to the value stored on the user record if the selector is empty.
   const propertyId =
-    user?.activePropertyId ??
+    contextPropertyId ||
+    user?.activePropertyId ||
     (user?.assignedPropertyIds?.[0] as string | undefined);
 
   const roomsQuery = useQuery({
