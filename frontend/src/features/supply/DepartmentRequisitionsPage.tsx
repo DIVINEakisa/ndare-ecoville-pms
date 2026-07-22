@@ -89,7 +89,8 @@ export function DepartmentRequisitionsPage() {
   const inventoryQuery = useQuery({
     queryKey: ['dept-inventory', propertyId],
     queryFn: () => listInventory({ propertyId: propertyId || undefined, limit: 200 }),
-    enabled: Boolean(propertyId)
+    enabled: Boolean(propertyId),
+    staleTime: 60_000
   });
 
   const requisitionsQuery = useQuery({
