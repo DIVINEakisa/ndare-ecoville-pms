@@ -4,10 +4,10 @@
   "version": "0.1.0",
   "description": "Hotel Apartment Management System for NuvraHub Digital Products & Solutions",
   "scripts": {
-    "dev": "npm-run-all --parallel dev:backend dev:frontend",
-    "dev:backend": "npm --workspace backend run dev",
-    "dev:frontend": "npm --workspace frontend run dev",
-    "build": "npm --workspace backend run build && npm --workspace frontend run build",
+    "dev": "node init && npm-run-all --parallel dev:backend dev:frontend",
+    "dev:backend": "node init && npm --workspace backend run dev",
+    "dev:frontend": "node init && npm --workspace frontend run dev",
+    "build": "node init && npm --workspace backend run build && npm --workspace frontend run build",
     "typecheck": "npm --workspace backend run typecheck && npm --workspace frontend run typecheck",
     "lint": "npm --workspace backend run lint && npm --workspace frontend run lint",
     "test": "npm --workspace backend run test"
