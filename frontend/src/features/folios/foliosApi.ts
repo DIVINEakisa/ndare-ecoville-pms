@@ -4,7 +4,15 @@ import type { ApiResponse, Folio, FolioItem, PaginationMeta, Payment } from '../
 type ListResponse<T> = ApiResponse<T[]> & { meta: PaginationMeta };
 
 export async function listFolios(params: Record<string, string | number | undefined>) {
-  const { data } = await apiClient.get<ListResponse<Folio>>('/folios', { params });
+  const cleanParams: Record<string, string | number> = {};
+  if (params.search) cleanParams.search = params.search;
+  if (params.status && params.status !== 'All statuses' && String(params.status).toLowerCase() !== 'all') {
+    cleanParams.status = params.status;
+  }
+  if (params.limit) cleanParams.limit = params.limit;
+  if (params.page) cleanParams.page = params.page;
+
+  const { data } = await apiClient.get<ListResponse<Folio>>('/folios', { params: cleanParams });
   return { items: data.data, meta: data.meta };
 }
 

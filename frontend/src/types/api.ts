@@ -71,6 +71,7 @@ export type Guest = {
     phone?: string;
     relationship?: string;
   };
+  status?: 'Checked In' | 'Reserved' | 'Checked Out' | 'Cancelled' | 'Registered';
 };
 
 export type Reservation = {

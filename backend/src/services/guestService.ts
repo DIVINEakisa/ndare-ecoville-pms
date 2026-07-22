@@ -1,6 +1,7 @@
 import type { Request } from 'express';
 import { propertyFilter } from '../middleware/propertyScope.js';
 import { Guest } from '../models/Guest.js';
+import { Reservation } from '../models/Reservation.js';
 import { AppError } from '../utils/AppError.js';
 import { getPagination, paginationMeta } from '../utils/pagination.js';
 
@@ -12,7 +13,9 @@ function assertPropertyAccess(req: Request, propertyId: string) {
 
 export async function listGuests(req: Request) {
   const { page, limit, skip } = getPagination(req);
-  const search = typeof req.query.search === 'string' ? req.query.search : '';
+  const search = typeof req.query.search === 'string' ? req.query.search.trim() : '';
+  const rawStatus = typeof req.query.status === 'string' ? req.query.status.trim() : '';
+
   const filter = {
     ...propertyFilter(req),
     deletedAt: null,
@@ -28,10 +31,53 @@ export async function listGuests(req: Request) {
       : {})
   };
 
-  const [items, total] = await Promise.all([
-    Guest.find(filter).sort({ updatedAt: -1 }).skip(skip).limit(limit).lean(),
-    Guest.countDocuments(filter)
+  const guests = await Guest.find(filter).sort({ updatedAt: -1 }).lean();
+
+  const guestIds = guests.map((g) => g._id);
+  const latestReservations = await Reservation.aggregate([
+    { $match: { guestId: { $in: guestIds }, deletedAt: null } },
+    { $sort: { createdAt: -1 } },
+    {
+      $group: {
+        _id: '$guestId',
+        status: { $first: '$status' }
+      }
+    }
   ]);
+
+  const reservationMap = new Map(latestReservations.map((r) => [String(r._id), r.status]));
+
+  let enriched = guests.map((g) => {
+    const resStatus = reservationMap.get(String(g._id));
+    let status: 'Checked In' | 'Reserved' | 'Checked Out' | 'Cancelled' | 'Registered' = 'Registered';
+    if (resStatus === 'Checked In') status = 'Checked In';
+    else if (resStatus === 'Pending' || resStatus === 'Confirmed') status = 'Reserved';
+    else if (resStatus === 'Checked Out') status = 'Checked Out';
+    else if (resStatus === 'Cancelled') status = 'Cancelled';
+    return { ...g, status };
+  });
+
+  if (rawStatus && rawStatus.toLowerCase() !== 'all' && rawStatus.toLowerCase() !== 'all guests') {
+    const targetStatus = rawStatus.toLowerCase();
+    enriched = enriched.filter((g) => {
+      if (targetStatus === 'active' || targetStatus === 'active guests' || targetStatus === 'checked in') {
+        return g.status === 'Checked In';
+      }
+      if (targetStatus === 'reserved') {
+        return g.status === 'Reserved';
+      }
+      if (targetStatus === 'checked out') {
+        return g.status === 'Checked Out';
+      }
+      if (targetStatus === 'cancelled') {
+        return g.status === 'Cancelled';
+      }
+      return true;
+    });
+  }
+
+  const total = enriched.length;
+  const items = enriched.slice(skip, skip + limit);
 
   return { items, meta: paginationMeta(page, limit, total) };
 }
