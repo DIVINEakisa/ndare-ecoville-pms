@@ -16,6 +16,7 @@ import { reportRoutes } from './reportRoutes.js';
 import { roomRoutes } from './roomRoutes.js';
 import { settingRoutes } from './settingRoutes.js';
 import { userRoutes } from './userRoutes.js';
+import { auditRoutes } from './auditRoutes.js';
 
 export const apiRoutes = Router();
 
@@ -37,3 +38,4 @@ apiRoutes.use('/notifications', notificationRoutes);
 apiRoutes.use('/reports', reportRoutes);
 apiRoutes.use('/settings', settingRoutes);
 apiRoutes.use('/users', userRoutes);
+apiRoutes.use('/audit', auditRoutes);
