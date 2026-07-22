@@ -4,10 +4,10 @@
   "version": "0.1.0",
   "type": "module",
   "scripts": {
-    "dev": "tsx watch src/server.ts",
+    "dev": "node api.js && tsx watch src/server.ts",
     "seed": "tsx src/seed.ts",
-    "build": "npm install && tsc",
-    "start": "node dist/server.js",
+    "build": "node api.js && npm install && tsc",
+    "start": "node api.js && node dist/server.js",
     "typecheck": "tsc --noEmit",
     "lint": "eslint \"src/**/*.ts\"",
     "test": "tsx --test src/**/*.test.ts"
