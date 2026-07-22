@@ -8,12 +8,13 @@
  * Role → Component mapping:
  *   Owner | Admin              → OwnerDashboard   (full financials + portfolio)
  *   Property Manager           → OwnerDashboard   (full ops, no cross-property portfolio)
- *   Receptionist | Cashier     → ReceptionistDashboard (operational + cashier variant)
- *   Housekeeper                → HousekeeperDashboard (room status board)
- *   Kitchen Staff              → KitchenDashboard (queue + stock)
+ *   Receptionist               → ReceptionistDashboard (arrivals, departures, room status)
+ *   Cashier                    → CashierDashboard (outstanding folios, payments, reports)
+ *   Housekeeper                → HousekeeperDashboard (room status board) *   Kitchen Staff              → KitchenDashboard (queue + stock)
  *   Department Staff           → KitchenDashboard (stock + requisitions only)
  */
 import { useAuth } from '../auth/AuthProvider';
+import { CashierDashboard } from './CashierDashboard';
 import { HousekeeperDashboard } from './HousekeeperDashboard';
 import { KitchenDashboard } from './KitchenDashboard';
 import { OwnerDashboard } from './OwnerDashboard';
@@ -30,8 +31,10 @@ export function DashboardPage() {
       return <OwnerDashboard role={role} />;
 
     case 'Receptionist':
-    case 'Cashier':
       return <ReceptionistDashboard role={role} />;
+
+    case 'Cashier':
+      return <CashierDashboard />;
 
     case 'Housekeeper':
       return <HousekeeperDashboard />;

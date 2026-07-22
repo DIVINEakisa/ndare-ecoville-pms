@@ -1,10 +1,8 @@
 /**
- * ReceptionistDashboard — visible to: Receptionist, Cashier
+ * ReceptionistDashboard — visible to: Receptionist role
  *
- * Receptionists: operational focus — arrivals, departures, room availability,
- *   pending reservations. No financial data exposed.
- * Cashiers: payment-oriented — outstanding folios and restaurant sales are
- *   surfaced, but the full revenue chart and portfolio are hidden.
+ * Operational focus — arrivals, departures, room availability,
+ * pending reservations, and outstanding folio balance.
  */
 import { useQuery } from '@tanstack/react-query';
 import { motion } from 'framer-motion';
@@ -32,9 +30,7 @@ const money = new Intl.NumberFormat('en-RW', {
   maximumFractionDigits: 0
 });
 
-export function ReceptionistDashboard({ role }: { role: UserRole }) {
-  const isCashier = role === 'Cashier';
-
+export function ReceptionistDashboard({ role: _role }: { role: UserRole }) {
   const summaryQuery = useQuery({
     queryKey: ['dashboard-summary', ''],
     queryFn: () => getDashboardSummary()
@@ -44,7 +40,7 @@ export function ReceptionistDashboard({ role }: { role: UserRole }) {
     return (
       <div>
         <PageHeader
-          title={isCashier ? 'Cashier Workspace' : 'Reception Workspace'}
+          title="Reception Workspace"
           breadcrumb={['Workspace', 'Dashboard']}
         />
         <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
@@ -71,7 +67,7 @@ export function ReceptionistDashboard({ role }: { role: UserRole }) {
   return (
     <div>
       <PageHeader
-        title={isCashier ? 'Cashier Workspace' : 'Reception Workspace'}
+        title="Reception Workspace"
         breadcrumb={['Workspace', 'Dashboard']}
       />
 
@@ -131,21 +127,13 @@ export function ReceptionistDashboard({ role }: { role: UserRole }) {
         <div className="rounded-2xl border border-slate-200/80 bg-white p-6 shadow-[0_18px_45px_rgba(15,23,42,0.07)] dark:border-slate-800 dark:bg-slate-900">
           <h2 className="text-lg font-semibold">Quick Actions</h2>
           <div className="mt-5 grid gap-3 sm:grid-cols-2">
-            {(isCashier
-              ? [
-                  { label: 'Settle folio',      href: '/folios' },
-                  { label: 'View reservations', href: '/reservations' },
-                  { label: 'Guest directory',   href: '/guests' },
-                  { label: 'Payment reports',   href: '/reports' },
-                ]
-              : [
-                  { label: 'New reservation',  href: '/reservations' },
-                  { label: 'Check in guest',   href: '/check-in' },
-                  { label: 'Check out guest',  href: '/check-out' },
-                  { label: 'Guest directory',  href: '/guests' },
-                  { label: 'View folios',      href: '/folios' },
-                ]
-            ).map(({ label, href }) => (
+            {[
+              { label: 'New reservation',  href: '/reservations' },
+              { label: 'Check in guest',   href: '/check-in' },
+              { label: 'Check out guest',  href: '/check-out' },
+              { label: 'Guest directory',  href: '/guests' },
+              { label: 'View folios',      href: '/folios' },
+            ].map(({ label, href }) => (
               <Link
                 key={label}
                 to={href}

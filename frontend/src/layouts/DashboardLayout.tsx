@@ -63,13 +63,13 @@ const ALL_NAV_GROUPS: NavGroup[] = [
         label: 'Reservations',
         href: '/reservations',
         icon: ClipboardList,
-        roles: ['Owner', 'Admin', 'Property Manager', 'Receptionist', 'Cashier']
+        roles: ['Owner', 'Admin', 'Property Manager', 'Receptionist']
       },
       {
         label: 'Guests',
         href: '/guests',
         icon: Users,
-        roles: ['Owner', 'Admin', 'Property Manager', 'Receptionist', 'Cashier']
+        roles: ['Owner', 'Admin', 'Property Manager', 'Receptionist']
       },
       {
         label: 'Rooms',
@@ -98,7 +98,7 @@ const ALL_NAV_GROUPS: NavGroup[] = [
         label: 'Restaurant',
         href: '/restaurant',
         icon: Soup,
-        roles: ['Owner', 'Admin', 'Property Manager', 'Receptionist', 'Cashier', 'Kitchen Staff']
+        roles: ['Owner', 'Admin', 'Property Manager', 'Receptionist', 'Kitchen Staff']
       },
       {
         label: 'Kitchen',
@@ -164,7 +164,7 @@ const ALL_NAV_GROUPS: NavGroup[] = [
         label: 'History',
         href: '/history',
         icon: History,
-        roles: ['Owner', 'Admin', 'Property Manager', 'Receptionist', 'Cashier']
+        roles: ['Owner', 'Admin', 'Property Manager', 'Receptionist']
       },
       {
         label: 'Settings',
